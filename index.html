@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Captura de Fotos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        html, body { overflow: hidden; touch-action: none; }
+        body { width: 100%; height: 100dvh; background-color: #121212; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; }
+        #view-wrapper { flex-grow: 1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; min-height: 0; width: 100%; }
+        video, #previewContainer { width: 90vw; max-width: 400px; max-height: 100%; height: auto; border: 2px solid #444; border-radius: 10px; object-fit: contain; }
+        #previewContainer { display: flex; gap: 1vw; }
+        #previewContainer img { height: auto; border: 2px solid #444; border-radius: 10px; display: block; object-fit: contain; max-width: 100%; }
+        #previewContainer.dual-view img { flex: 1; min-width: 0; max-width: 50%; }
+        button { padding: 12px 16px; font-size: 16px; border-radius: 8px; border: 1px solid #555; background-color: #333; color: white; cursor: pointer; box-sizing: border-box; }
+        button:disabled { background-color: #555; color: #999; cursor: not-allowed; }
+        select { height: 48px; min-height: 48px; font-size: 18px; border: 1px solid #555; background-color: #333; color: white; border-radius: 8px; }
+        #controls-container, #actions-scroll-container { width: 90vw; max-width: 400px; margin-top: 1vh; margin-bottom: 0.5vh; flex-shrink: 0; align-self: center; }
+        #actions-scroll-container { margin-top: 0.5vh; margin-bottom: 1vh; }
+        #row { display: flex; gap: 1vw; margin-top: 1vh; }
+        #row select { flex: 1; }
+        .photo-actions-grid { display: flex; flex-wrap: nowrap; gap: 1vw; margin-top: 1vh; justify-content: space-between; }
+        .photo-actions-grid button { flex: 1 1 auto; min-width: 0; font-size: 14px; padding: 10px 8px; }
+        #singlePhotoActions button { min-width: calc((100% / 4) - (1vw * 3 / 4)); max-width: calc((100% / 4) - (1vw * 3 / 4)); }
+        #dualPhotoActions button { min-width: calc((100% / 3) - (1vw * 2 / 3)); max-width: calc((100% / 3) - (1vw * 2 / 3)); }
+        #dualRetakeControls button { min-width: calc((100% / 2) - (1vw / 2)); max-width: calc((100% / 2) - (1vw / 2)); }
+        #actions { display: flex; gap: 1vw; width: 100%; }
+        #clearDataBtn { background-color: #dc3545; }
+        #saveZipBtn { background-color: #007bff; }
+        #thumbnails { display: flex; overflow-x: auto; white-space: nowrap; touch-action: pan-x; -webkit-overflow-scrolling: touch; scrollbar-width: none; width: 90vw; max-width: 400px; flex-shrink: 0; box-sizing: border-box; align-self: center; min-height: 80px; align-items: center; }
+        #thumbnails::-webkit-scrollbar { display: none; }
+        .thumbnail-container { position: relative; flex-shrink: 0; padding: 5px; margin: 0; box-sizing: border-box; }
+        .thumbnail-indicator { position: absolute; top: 7px; right: 7px; background-color: rgba(0, 123, 255, 0.9); color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 4px; pointer-events: none; }
+        .oculto { display: none !important; }
+        .disabled-thumbnails { opacity: 0.5; pointer-events: none; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: #2a2a2a; padding: 20px; border-radius: 10px; text-align: center; width: 80vw; max-width: 300px; border: 1px solid #444; }
+        .modal-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; }
+        .modal-button-yes, .modal-button-no { flex: 1 1 45%; max-width: 45%; min-width: 100px; box-sizing: border-box; }
+        .toast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 50%; transform: translateX(-50%); background-color: #28a745; color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        #thumbnails img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; display: block; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="thumbnails"></div>
+    <div id="view-wrapper">
+        <video id="video" autoplay playsinline></video>
+        <div id="previewContainer" class="oculto">
+        <img id="photoPreviewFrontal" alt="Frontal Photo" />
+        <img id="photoPreviewReverso" class="oculto" alt="Reverse Photo" />
+        </div>
+    </div>
+    <div id="controls-container">
+        <div id="reviewControls" class="oculto">
+        <div id="dualRetakeControls" class="photo-actions-grid oculto">
+            <button id="retakeFrontalBtn" style="background-color: #ffc107; color: #212529;">Retomar Frontal</button>
+            <button id="retakeReversoBtn" style="background-color: #ffc107; color: #212529;">Retomar Reverso</button>
+        </div>
+        <div id="row">
+            <select id="sizeSelect">
+            <option value="">Selecciona talla</option>
+            <option>CH</option><option>M</option><option>L/G</option><option>XL</option>
+            <option>0XL</option><option>1XL</option><option>2XL</option><option>3XL</option>
+            <option>4XL</option><option>5XL</option><option>6XL</option>
+            <option>3 MX/24 US</option><option>4 MX/25 US</option><option>5 MX/26 US</option>
+            <option>6 MX/27 US</option><option>7 MX/28 US</option><option>8 MX/29 US</option>
+            <option>9 MX/30 US</option><option>10 MX/31 US</option><option>11 MX/32 US</option>
+            <option>12 MX/33 US</option><option>13 MX/34 US</option><option>14 MX/35 US</option>
+            <option>15 MX/36 US</option><option>16 MX/37 US</option><option>17 MX/38 US</option>
+            <option>18 MX/39 US</option><option>19 MX/40 US</option><option>20 MX/41 US</option>
+            <option>21 MX/42 US</option><option>22 MX/43 US</option><option>23 MX/44 US</option>
+            <option>24 MX/45 US</option><option>25 MX/46 US</option><option>26 MX/47 US</option>
+            </select>
+            <select id="priceSelect">
+            <option value="">Selecciona precio</option>
+            <option>$40</option><option>$50</option><option>$60</option><option>$70</option><option>$80</option>
+            <option>$100</option><option>$120</option><option>$150</option><option>$200</option><option>$250</option>
+            </select>
+        </div>
+        <div id="singlePhotoActions" class="photo-actions-grid oculto">
+            <button id="addReversoBtn" style="background-color: #17a2b8;">Añadir Reverso</button>
+            <button id="retakeSingleBtn" style="background-color: #ffc107; color: #212529;">Retomar</button>
+            <button id="saveSingleBtn" style="background-color: #28a745;">Guardar</button>
+            <button id="cancelSingleBtn" style="background-color:#555;">Cancelar</button>
+        </div>
+        <div id="dualPhotoActions" class="photo-actions-grid oculto">
+            <button id="deleteReversoBtn" style="background-color: #dc3545;">Eliminar Reverso</button>
+            <button id="saveDualBtn" style="background-color: #28a745;">Guardar</button>
+            <button id="cancelDualBtn" style="background-color:#555;">Cancelar</button>
+        </div>
+        </div>
+    </div>
+    <div id="actions-scroll-container">
+        <div id="actions" class="oculto">
+        <button id="saveZipBtn">Descargar ZIP (0)</button>
+        <button id="clearDataBtn">Eliminar Data</button>
+        </div>
+    </div>
+    <div id="custom-confirm" class="modal-overlay oculto">
+        <div class="modal-content">
+        <p id="modal-message">¿Estás seguro?</p>
+        <div class="modal-actions">
+            <button id="confirm-yes" class="modal-button-yes">Sí</button>
+            <button id="confirm-no" class="modal-button-no">No</button>
+        </div>
+        </div>
+    </div>
+    <div id="toast-notification" class="toast oculto"></div>
+
+<script>
+    const video = document.getElementById('video');
+    const previewContainer = document.getElementById('previewContainer');
+    const photoPreviewFrontal = document.getElementById('photoPreviewFrontal');
+    const photoPreviewReverso = document.getElementById('photoPreviewReverso');
+    const reviewControls = document.getElementById('reviewControls');
+    const sizeSelect = document.getElementById('sizeSelect');
+    const priceSelect = document.getElementById('priceSelect');
+    const saveZipBtn = document.getElementById('saveZipBtn');
+    const actionsDiv = document.getElementById('actions');
+    const thumbnails = document.getElementById("thumbnails");
+    const dualRetakeControls = document.getElementById('dualRetakeControls');
+    const singlePhotoActions = document.getElementById('singlePhotoActions');
+    const dualPhotoActions = document.getElementById('dualPhotoActions');
+    const addReversoBtn = document.getElementById('addReversoBtn');
+    const retakeSingleBtn = document.getElementById('retakeSingleBtn');
+    const saveSingleBtn = document.getElementById('saveSingleBtn');
+    const cancelSingleBtn = document.getElementById('cancelSingleBtn');
+    const retakeFrontalBtn = document.getElementById('retakeFrontalBtn');
+    const retakeReversoBtn = document.getElementById('retakeReversoBtn');
+    const deleteReversoBtn = document.getElementById('deleteReversoBtn');
+    const saveDualBtn = document.getElementById('saveDualBtn');
+    const cancelDualBtn = document.getElementById('cancelDualBtn');
+    const clearDataBtn = document.getElementById('clearDataBtn');
+
+    const DB_NAME = "MisFotosDB";
+    const DB_VERSION = 2;
+    const OBJECT_STORE_NAME = "fotos";
+
+    let db;
+    let imageCapture;
+    let fotoBlob = null;
+    let fotoReversoBlob = null;
+    let editingPhotoId = null;
+    let state = 'capturing';
+    let retakeTarget = null;
+    let thumbnailURLs = [];
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+            db.createObjectStore(OBJECT_STORE_NAME, { keyPath: "id", autoIncrement: true });
+        } else if (e.oldVersion < 2) {
+            const transaction = e.target.transaction;
+            const store = transaction.objectStore(OBJECT_STORE_NAME);
+            store.openCursor().onsuccess = function(event) {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const data = cursor.value;
+                    if (data.fotoReverso === undefined) {
+                        data.fotoReverso = null;
+                        cursor.update(data);
+                    }
+                    cursor.continue();
+                }
+            };
+        }
+    };
+    request.onsuccess = e => { db = e.target.result; initCamera(); };
+    request.onerror = e => showToast('❌ Error al abrir la base de datos.');
+
+    function initCamera() {
+        if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); video.srcObject = null; }
+        const constraintsHighRes = { video: { facingMode: 'environment', width: { ideal: 2048 }, height: { ideal: 1536 } } };
+        const constraintsStandard = { video: { facingMode: 'environment' } };
+        return navigator.mediaDevices.getUserMedia(constraintsHighRes)
+            .then(stream => { video.srcObject = stream; imageCapture = new ImageCapture(stream.getVideoTracks()[0]); updateUI(); })
+            .catch(() => navigator.mediaDevices.getUserMedia(constraintsStandard)
+                .then(stream => { video.srcObject = stream; imageCapture = new ImageCapture(stream.getVideoTracks()[0]); updateUI(); })
+                .catch(finalErr => showToast("❌ No se pudo acceder a la cámara: " + finalErr.message)));
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state === 'capturing') initCamera(); });
+    video.addEventListener('click', async () => {
+        try {
+            const blob = imageCapture ? await imageCapture.takePhoto() : await captureWithCanvas();
+            if (state === 'capturing') fotoBlob = blob;
+            else if (state === 'retaking') {
+                if (retakeTarget === 'frontal') fotoBlob = blob;
+                else if (retakeTarget === 'reverso') fotoReversoBlob = blob;
+            }
+            showReviewMode();
+        } catch (error) { showToast('❌ No se pudo capturar la imagen. Inténtalo de nuevo.'); }
+    });
+    function captureWithCanvas() {
+        return new Promise(resolve => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(resolve, 'image/jpeg', 0.9);
+        });
+    }
+
+    function showCameraMode() {
+        state = 'capturing'; retakeTarget = null;
+        if (photoPreviewFrontal.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewFrontal.src);
+        if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
+        fotoBlob = null; fotoReversoBlob = null; editingPhotoId = null;
+        sizeSelect.value = ""; priceSelect.value = "";
+        video.classList.remove('oculto'); previewContainer.classList.add('oculto');
+        reviewControls.classList.add('oculto'); dualRetakeControls.classList.add('oculto');
+        thumbnails.classList.remove('disabled-thumbnails');
+        if (!video.srcObject || !video.srcObject.active || video.srcObject.getTracks().length === 0 || video.srcObject.getTracks()[0].readyState !== 'live') initCamera();
+        updateUI();
+    }
+    function showRetakeMode(target) {
+        state = 'retaking'; retakeTarget = target;
+        video.classList.remove('oculto'); previewContainer.classList.add('oculto');
+        reviewControls.classList.add('oculto'); thumbnails.classList.add('disabled-thumbnails');
+        actionsDiv.classList.add('oculto');
+        initCamera().catch(() => { showToast('❌ No se pudo acceder a la cámara para retomar. Volviendo a la previsualización.'); showReviewMode(); });
+    }
+    function showReviewMode() {
+        state = 'review';
+        if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); video.srcObject = null; }
+        video.classList.add('oculto'); previewContainer.classList.remove('oculto');
+        reviewControls.classList.remove('oculto'); thumbnails.classList.add('disabled-thumbnails');
+        actionsDiv.classList.add('oculto');
+        if (fotoBlob) { if (photoPreviewFrontal.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewFrontal.src); photoPreviewFrontal.src = URL.createObjectURL(fotoBlob); } else { photoPreviewFrontal.src = ''; }
+        if (fotoReversoBlob) {
+            if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src); photoPreviewReverso.src = URL.createObjectURL(fotoReversoBlob);
+            previewContainer.classList.add('dual-view'); photoPreviewReverso.classList.remove('oculto');
+            singlePhotoActions.classList.add('oculto'); dualPhotoActions.classList.remove('oculto'); dualRetakeControls.classList.remove('oculto');
+        } else {
+            previewContainer.classList.remove('dual-view'); photoPreviewReverso.classList.add('oculto');
+            if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
+            singlePhotoActions.classList.remove('oculto'); dualPhotoActions.classList.add('oculto'); dualRetakeControls.classList.add('oculto');
+        }
+        updateUI();
+    }
+
+    addReversoBtn.onclick = () => showRetakeMode('reverso');
+    retakeSingleBtn.onclick = () => showRetakeMode('frontal');
+    cancelSingleBtn.onclick = showCameraMode;
+    retakeFrontalBtn.onclick = () => showRetakeMode('frontal');
+    retakeReversoBtn.onclick = () => showRetakeMode('reverso');
+    deleteReversoBtn.onclick = async () => {
+        if (await askForConfirmation("¿Eliminar solo la foto de reverso?")) {
+            if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
+            fotoReversoBlob = null; showToast("Reverso eliminado."); showReviewMode();
+        }
+    };
+    cancelDualBtn.onclick = showCameraMode;
+    saveSingleBtn.onclick = handleSave;
+    saveDualBtn.onclick = handleSave;
+
+    async function handleSave() {
+        if (!fotoBlob) { showToast("⚠️ No hay foto frontal para guardar."); return; }
+        if (!sizeSelect.value || !priceSelect.value) { showToast("⚠️ Selecciona talla y precio antes de guardar."); return; }
+        try {
+            const processedFrontalBlob = await convertToJpg(fotoBlob);
+            let processedReversoBlob = fotoReversoBlob ? await convertToJpg(fotoReversoBlob) : null;
+            const tx = db.transaction(OBJECT_STORE_NAME, "readwrite");
+            const store = tx.objectStore(OBJECT_STORE_NAME);
+            const record = { foto: processedFrontalBlob, talla: sizeSelect.value, precio: priceSelect.value, fotoReverso: processedReversoBlob };
+            if (editingPhotoId !== null) { record.id = editingPhotoId; store.put(record); }
+            else { store.add(record); }
+            tx.oncomplete = () => { showToast(editingPhotoId ? "✅ Producto actualizado" : "✅ Producto guardado"); showCameraMode(); };
+            tx.onerror = (e) => { showToast("❌ Error al guardar el producto."); };
+        } catch (error) { showToast("❌ Error procesando la imagen. Intenta de nuevo."); }
+    }
+    function convertToJpg(blob) {
+        return new Promise(resolve => {
+            const img = document.createElement('img');
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width; canvas.height = img.height;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                canvas.toBlob(resolve, 'image/jpeg', 0.85); URL.revokeObjectURL(img.src);
+            };
+            img.src = URL.createObjectURL(blob);
+        });
+    }
+
+    clearDataBtn.onclick = async () => {
+        if (await askForConfirmation("¿Eliminar todas las fotos? Esta acción es irreversible.")) {
+            const tx = db.transaction(OBJECT_STORE_NAME, "readwrite");
+            tx.objectStore(OBJECT_STORE_NAME).clear().onsuccess = () => {
+                showToast("Todos los datos han sido eliminados.");
+                thumbnailURLs.forEach(url => URL.revokeObjectURL(url)); thumbnailURLs = []; updateUI();
+            };
+            tx.onerror = (e) => { showToast("❌ Error al eliminar todos los datos."); };
+        }
+    };
+    saveZipBtn.onclick = () => {
+        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onsuccess = (e) => {
+            const photos = e.target.result;
+            if (photos.length === 0) { showToast("No hay fotos para exportar."); return; }
+            const zip = new JSZip();
+            photos.forEach((item, index) => {
+                const photoIndex = index + 1;
+                if (item.foto) zip.file(`foto_${photoIndex}_frontal.jpg`, item.foto);
+                if (item.fotoReverso) zip.file(`foto_${photoIndex}_reverso.jpg`, item.fotoReverso);
+                zip.file(`foto_${photoIndex}_datos.txt`, `Talla: ${item.talla}\nPrecio: ${item.precio}`);
+            });
+            zip.generateAsync({ type: "blob" }).then(content => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content); a.download = "fotos.zip";
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                URL.revokeObjectURL(a.href); showToast("Descarga ZIP iniciada.");
+            }).catch(() => showToast("❌ Error al generar el archivo ZIP."));
+        };
+    };
+
+    function updateCounters() {
+        if (!db) return;
+        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).count().onsuccess = e => {
+            const count = e.target.result;
+            actionsDiv.classList.toggle('oculto', count === 0 || state !== 'capturing');
+            saveZipBtn.textContent = `Descargar ZIP (${count})`;
+        };
+    }
+    function executeDelete(photoId, frontalUrl, reversoUrl) {
+        if (!db) return;
+        db.transaction(OBJECT_STORE_NAME, "readwrite").objectStore(OBJECT_STORE_NAME).delete(photoId);
+        db.transaction(OBJECT_STORE_NAME, "readwrite").oncomplete = () => {
+            showToast("Foto eliminada.");
+            if (frontalUrl) URL.revokeObjectURL(frontalUrl);
+            if (reversoUrl) URL.revokeObjectURL(reversoUrl);
+            updateUI();
+        };
+        db.transaction(OBJECT_STORE_NAME, "readwrite").onerror = () => { showToast("❌ Error al eliminar la foto."); };
+    }
+    function askForConfirmation(message) {
+        return new Promise(resolve => {
+            const modal = document.getElementById('custom-confirm');
+            document.getElementById('modal-message').textContent = message;
+            modal.classList.remove('oculto');
+            const yesBtn = document.getElementById('confirm-yes');
+            const noBtn = document.getElementById('confirm-no');
+            const cleanup = (result) => { modal.classList.add('oculto'); yesBtn.onclick = null; noBtn.onclick = null; resolve(result); };
+            yesBtn.onclick = () => cleanup(true); noBtn.onclick = () => cleanup(false);
+        });
+    }
+    function showToast(message) {
+        const toast = document.getElementById('toast-notification');
+        toast.textContent = message; toast.classList.remove('oculto'); void toast.offsetWidth; toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.classList.add('oculto'), 500); }, 2500);
+    }
+    function updateUI() {
+        if (!db) return;
+        updateCounters();
+        thumbnailURLs.forEach(url => URL.revokeObjectURL(url)); thumbnailURLs = []; thumbnails.innerHTML = '';
+        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onsuccess = (e) => {
+            const photos = e.target.result;
+            photos.sort((a, b) => b.id - a.id);
+            photos.forEach(photoData => {
+                const container = document.createElement('div'); container.className = 'thumbnail-container';
+                const img = document.createElement('img');
+                const url = URL.createObjectURL(photoData.foto); img.src = url; thumbnailURLs.push(url);
+                if (photoData.fotoReverso) { const indicator = document.createElement('span'); indicator.className = 'thumbnail-indicator'; indicator.textContent = '2'; container.appendChild(indicator); }
+                container.appendChild(img);
+                let pressTimer = null; let isLongPress = false;
+                const pressStart = (event) => {
+                    if (thumbnails.classList.contains('disabled-thumbnails')) return;
+                    isLongPress = false; pressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        fotoBlob = photoData.foto; fotoReversoBlob = photoData.fotoReverso || null;
+                        sizeSelect.value = photoData.talla || ""; priceSelect.value = photoData.precio || "";
+                        editingPhotoId = photoData.id; showReviewMode();
+                    }, 500);
+                };
+                const pressEnd = () => clearTimeout(pressTimer);
+                container.onclick = async () => {
+                    if (thumbnails.classList.contains('disabled-thumbnails') || isLongPress) return;
+                    if (await askForConfirmation("¿Deseas eliminar esta foto?")) {
+                        const reversoUrlToRevoke = photoData.fotoReverso ? URL.createObjectURL(photoData.fotoReverso) : null;
+                        executeDelete(photoData.id, img.src, reversoUrlToRevoke);
+                    }
+                };
+                container.addEventListener('mousedown', pressStart); container.addEventListener('touchstart', pressStart);
+                container.addEventListener('mouseup', pressEnd); container.addEventListener('mouseleave', pressEnd); container.addEventListener('touchend', pressEnd);
+                thumbnails.appendChild(container);
+            });
+        };
+        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onerror = () => showToast("❌ Error al cargar las miniaturas.");
+    }
+</script>
+</body>
+</html>
