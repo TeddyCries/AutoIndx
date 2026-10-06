@@ -1,7 +1,12 @@
-const CACHE_NAME = 'autoindx-shell-v11';
+const CACHE_NAME = 'autoindx-shell-v24';
 const APP_SHELL = [
     './',
     './index.html',
+    './assets/css/app.css',
+    './assets/js/app.js',
+    './assets/js/alpha-mask-editor.js',
+    './assets/js/template-editor.js',
+    './assets/js/rmbg-background-removal.js',
     './manifest.webmanifest',
     './favicon.ico',
     './logo.svg',
