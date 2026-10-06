@@ -861,10 +861,9 @@
     }
     function enterProductEditor(item) {
         editorReturnToDashboard = captureWorkspace.classList.contains('oculto');
-        if (editorReturnToDashboard) {
-            collectionDashboard.classList.add('oculto');
-            captureWorkspace.classList.remove('oculto');
-        }
+        collectionDashboard.classList.add('oculto');
+        captureWorkspace.classList.remove('oculto');
+        document.getElementById('openCameraToolBtn').textContent = 'Ver productos';
         fotoBlob = item.foto; fotoReversoBlob = item.fotoReverso || null;
         fotoOriginalBlob = item.fotoOriginal || null; fotoReversoOriginalBlob = item.fotoReversoOriginal || null;
         sizeSelect.value = item.talla || ''; priceSelect.value = item.precio || '';
@@ -874,7 +873,6 @@
         skipBackgroundRemovalForCurrentProduct = Boolean(item.demo);
         currentImageIsDemo = Boolean(item.demo);
         showReviewMode();
-        prepareEditorImages();
     }
     function splitImportedName(file) {
         const path = file.webkitRelativePath || file.name;
