@@ -69,21 +69,21 @@
         .thumbnail-container { position: relative; flex: 0 0 auto; padding: 2px; }
         .thumbnail-edit { display: block; min-height: 0; padding: 0; border: 0; background: transparent; }
         #thumbnails img { display: block; width: 58px; height: 58px; object-fit: cover; border-radius: 12px; cursor: pointer; }
-        .thumbnail-delete { position: absolute; z-index: 2; top: -3px; right: -3px; display: grid; place-items: center; width: 27px; min-height: 27px; padding: 0; border-radius: 50%; background: #79303a; font-size: 17px; line-height: 1; }
+        .thumbnail-delete { position: absolute; z-index: 2; top: -2px; right: -2px; display: grid; place-items: center; width: 23px; min-height: 23px; padding: 0; border-radius: 50%; background: #79303a; font-size: 14px; line-height: 1; }
         .thumbnail-indicator { position: absolute; z-index: 1; bottom: 5px; left: 5px; padding: 2px 5px; border-radius: 6px; background: var(--accent); color: #082019; font-size: 10px; font-weight: 800; pointer-events: none; }
         .capture-header { display: flex; align-items: center; gap: 12px; width: min(100%, 760px); margin: 0 auto; }
         .capture-header button { flex: 0 0 auto; border-color: rgba(67,214,173,.42); color: var(--accent); }
         .capture-header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #view-wrapper { position: relative; display: flex; flex: 1 1 auto; align-items: center; justify-content: center; width: min(100%, 760px); min-height: 250px; max-height: min(58dvh, 620px); margin: 0 auto; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #05080b; box-shadow: 0 18px 55px rgba(0,0,0,.3); }
-        video, #previewContainer { display: block; width: 100%; height: 100%; object-fit: cover; }
-        video { touch-action: none; }
+        #view-wrapper { position: relative; display: flex; flex: 0 1 min(58dvh, 620px); align-items: center; justify-content: center; width: min(100%, 760px); height: min(58dvh, 620px); min-height: min(250px, 58dvh); max-height: min(58dvh, 620px); margin: 0 auto; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #05080b; box-shadow: 0 18px 55px rgba(0,0,0,.3); }
+        video, #previewContainer { display: block; flex: 0 1 100%; min-width: 0; min-height: 0; width: 100%; height: 100%; object-fit: cover; }
+        video { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         .debug-camera { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 24px; background: radial-gradient(circle at 50% 30%, #28443f, #111a20 70%); text-align: center; }
         .debug-camera-icon { display: grid; place-items: center; width: 74px; height: 74px; margin-bottom: 18px; border: 1px solid rgba(67,214,173,.4); border-radius: 24px; background: rgba(67,214,173,.12); color: var(--accent); font-size: 36px; }
         .debug-camera strong { font-size: 20px; }
         .debug-camera p { margin: 7px 0; color: var(--accent); font-size: 14px; font-weight: 700; }
         .debug-camera small { max-width: 280px; color: var(--muted); line-height: 1.5; }
         #previewContainer { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; }
-        #previewContainer img { display: block; width: 100%; height: 100%; min-width: 0; object-fit: contain; border-radius: 15px; background: #05080b; }
+        #previewContainer img { display: block; flex: 1 1 0; width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: contain; border-radius: 15px; background: #05080b; }
         #previewContainer.dual-view img { width: 50%; }
         .camera-top-controls { position: absolute; z-index: 2; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
         .camera-top-controls button { min-height: 42px; padding: 9px 13px; border-radius: 999px; background: rgba(9,15,21,.76); backdrop-filter: blur(12px); pointer-events: auto; }
@@ -100,16 +100,15 @@
         #captureBtn::after { display: block; width: 48px; height: 48px; margin: auto; border-radius: 50%; background: white; content: ""; }
         #advancedControls { position: absolute; z-index: 4; top: 66px; right: 12px; width: min(280px, calc(100% - 24px)); padding: 13px 15px; border: 1px solid var(--line); border-radius: 17px; background: rgba(9,15,21,.9); backdrop-filter: blur(14px); }
         #advancedControls label { display: flex; flex-direction: column; gap: 7px; margin: 8px 0; color: #e8edf2; font-size: 13px; }
-        #advancedControls label[for="exposureSlider"] { flex-direction: row; justify-content: space-between; }
-        #exposureSlider { width: 100%; margin: 13px 0 3px; accent-color: var(--accent); }
+        #view-wrapper { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         #whiteBalanceSelect { min-height: 40px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: #111820; color: inherit; font: inherit; }
         .gesture-help { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
         #controls-container { width: min(100%, 760px); margin: 0 auto; flex-shrink: 0; }
         #reviewControls { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); }
-        .selection-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        .selection-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
         .selection-button { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-width: 0; min-height: 64px; padding: 9px 12px; text-align: left; background: #202b37; }
         .selection-label { color: var(--muted); font-size: 11px; font-weight: 600; }
-        .selection-value { overflow: hidden; max-width: 100%; color: white; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+        .selection-value { max-width: 100%; color: white; font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
         .photo-actions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
         .photo-actions-grid button { min-width: 0; padding: 10px 8px; font-size: 13px; }
         #singlePhotoActions button:nth-child(3), #dualPhotoActions button:nth-child(2) { border-color: #40c99e; background: #137c60; }
@@ -131,8 +130,8 @@
         .picker-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
         .picker-header h2 { margin: 0; font-size: 21px; }
         #pickerCloseBtn { min-height: 40px; padding: 7px 12px; }
-        #pickerGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 9px; overflow-y: auto; padding: 2px 3px 6px 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-        #pickerGrid button { min-height: 58px; background: #202b37; }
+        #pickerGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(min(100%, 104px), 1fr)); gap: 9px; overflow-y: auto; padding: 2px 3px 6px 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        #pickerGrid button { min-width: 0; min-height: 58px; padding: 9px 6px; background: #202b37; line-height: 1.25; overflow-wrap: anywhere; white-space: normal; }
         #pickerGrid button.selected { border-color: var(--accent); background: var(--accent); color: #082019; }
         #templateModal { z-index: 1020; }
         #preparingOverlay { z-index: 1040; }
@@ -191,7 +190,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .toast { position: fixed; z-index: 2000; right: 16px; bottom: max(20px, env(safe-area-inset-bottom)); left: 16px; width: fit-content; max-width: calc(100vw - 32px); margin: auto; padding: 12px 18px; border: 1px solid var(--line); border-radius: 14px; background: #1e302c; color: white; opacity: 0; pointer-events: none; text-align: center; transition: opacity .2s ease; }
         .toast.show { opacity: 1; }
-        @media (max-height: 700px) { body { gap: 6px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } #thumbnails { min-height: 55px; } #thumbnails img { width: 46px; height: 46px; } #view-wrapper { min-height: 180px; max-height: 53dvh; } }
+        @media (max-height: 700px) { body { gap: 6px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } #thumbnails { min-height: 55px; } #thumbnails img { width: 46px; height: 46px; } #view-wrapper { flex-basis: 53dvh; height: 53dvh; min-height: min(180px, 53dvh); max-height: 53dvh; } }
         @media (max-width: 620px) { .app-header { align-items: flex-start; } .app-header .app-subtitle { max-width: 170px; line-height: 1.35; } .header-actions { flex-direction: column-reverse; align-items: flex-end; gap: 5px; } #countBadge { padding: 5px 8px; font-size: 11px; } #activePackageBadge { max-width: 110px; padding: 5px 8px; font-size: 10px; } .template-layout { grid-template-columns: 1fr; } #templatePreview { max-height: 42dvh; } .template-fields { overflow: visible; } }
         @media (orientation: landscape) and (min-width: 700px) { #captureWorkspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 370px); grid-template-rows: auto minmax(0, 1fr) auto; align-items: stretch; gap: 12px; width: 100%; min-height: 0; } .capture-header { grid-column: 1 / -1; grid-row: 1; width: 100%; } #thumbnails { grid-column: 1; grid-row: 3; width: 100%; } #view-wrapper { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: none; } #controls-container { grid-column: 2; grid-row: 2 / 4; width: 100%; align-self: center; } }
         @media (max-width: 620px) { .home-hero { align-items: flex-start; flex-direction: column; } #homeCreatePackageBtn { width: 100%; } .collection-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } #collectionGrid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; } .collection-card-copy { padding: 10px; } .collection-card-copy strong { font-size: 13px; } .collection-card-copy span { font-size: 11px; } .collection-toolbar { align-items: stretch; } #collectionNameTitle { flex: 1 0 100%; max-width: none; } .collection-toolbar button, .collection-toolbar label { flex: 1 1 44%; padding: 9px; font-size: 12px; } #productGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-actions > button { flex: 1 1 45%; } .capture-header { justify-content: space-between; } }
@@ -256,8 +255,6 @@
         <div id="focusReticle" class="focus-reticle oculto" aria-hidden="true"></div>
         <div id="focusHint" class="focus-hint oculto" role="status" aria-live="polite"></div>
         <div id="advancedControls" class="oculto">
-            <label for="exposureSlider"><span>Exposición</span><span id="exposureValue">0</span></label>
-            <input id="exposureSlider" type="range" disabled>
             <label for="whiteBalanceSelect">Balance de blancos
                 <select id="whiteBalanceSelect" disabled>
                     <option value="auto">Automático</option>
@@ -266,7 +263,7 @@
                     <option value="incandescent">Interior cálido</option>
                 </select>
             </label>
-            <p class="gesture-help">Mantén pulsada la pantalla para enfocar y desliza a los lados para aclarar u oscurecer.</p>
+            <p class="gesture-help">Mantén pulsado para fijar el enfoque y la luz; luego desliza a los lados para aclarar u oscurecer, si la cámara lo permite.</p>
         </div>
         <div class="camera-bottom-controls"><button id="captureBtn" type="button" aria-label="Tomar foto"></button></div>
     </div>
@@ -439,8 +436,6 @@
     const flashBtn = document.getElementById('flashBtn');
     const advancedToggleBtn = document.getElementById('advancedToggleBtn');
     const advancedControls = document.getElementById('advancedControls');
-    const exposureSlider = document.getElementById('exposureSlider');
-    const exposureValue = document.getElementById('exposureValue');
     const whiteBalanceSelect = document.getElementById('whiteBalanceSelect');
     const cameraControls = document.getElementById('cameraControls');
     const captureBtn = document.getElementById('captureBtn');
@@ -508,6 +503,8 @@
     const OBJECT_STORE_NAME = "fotos";
     const PACKAGE_STORE_NAME = "paquetes";
     const SETTINGS_STORE_NAME = "ajustes";
+    const LAST_SCREEN_KEY = 'autoindx-last-screen';
+    const LAST_PHOTO_KEY = 'autoindx-last-photo';
 
     let db;
     let imageCapture;
@@ -559,6 +556,11 @@
     let homeObjectUrls = [];
     let appNavigationStack = [];
 
+    function rememberView(screen, photoId = null) {
+        localStorage.setItem(LAST_SCREEN_KEY, screen);
+        if (photoId === null) localStorage.removeItem(LAST_PHOTO_KEY);
+        else localStorage.setItem(LAST_PHOTO_KEY, String(photoId));
+    }
     function pushAppNavigation(kind, onBack) {
         appNavigationStack.push({ kind, onBack });
         history.pushState({ autoindx: true, depth: appNavigationStack.length }, '');
@@ -683,6 +685,28 @@
         collectionWorkspace.classList.add('oculto');
         activePackageBadge.classList.add('oculto');
         updateUI();
+        await restoreLastView();
+    }
+    async function restoreLastView() {
+        const lastScreen = localStorage.getItem(LAST_SCREEN_KEY);
+        const savedPhotoId = Number(localStorage.getItem(LAST_PHOTO_KEY));
+        if (!['collection', 'editor'].includes(lastScreen)) return;
+        if (!packages.some(item => item.id === activePackageId)) {
+            rememberView('home');
+            return;
+        }
+        enterCollection(activePackageId, { prompt: false });
+        if (lastScreen !== 'editor') return;
+        if (!Number.isSafeInteger(savedPhotoId) || savedPhotoId < 1) {
+            rememberView('collection');
+            return;
+        }
+        const item = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'get', savedPhotoId);
+        if (!item || (item.packageId || 'default') !== activePackageId) {
+            rememberView('collection');
+            return;
+        }
+        enterProductEditor(item);
     }
     function activePackage() {
         return packages.find(item => item.id === activePackageId) || packages[0];
@@ -868,9 +892,10 @@
         const allProducts = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
         renderCollectionHome(allProducts);
     }
-    function enterCollection(packageId) {
+    function enterCollection(packageId, { prompt = true } = {}) {
         activePackageId = packageId;
         localStorage.setItem('autoindx-active-package', activePackageId);
+        rememberView('collection');
         const current = activePackage();
         collectionNameTitle.textContent = current ? current.name : 'Colección';
         homeView.classList.add('oculto');
@@ -883,7 +908,7 @@
         const returnToLibrary = () => showCollectionLibrary();
         pushAppNavigation('collection', returnToLibrary);
         renderCollectionWorkspace(); updateUI();
-        promptToPrepareCollection(packageId).catch(error => showToast(`❌ No se pudo revisar la colección: ${error.message}`));
+        if (prompt) promptToPrepareCollection(packageId).catch(error => showToast(`❌ No se pudo revisar la colección: ${error.message}`));
     }
     async function promptToPrepareCollection(packageId) {
         const products = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
@@ -907,6 +932,7 @@
         homeView.classList.remove('oculto');
         collectionWorkspace.classList.add('oculto');
         activePackageBadge.classList.add('oculto');
+        rememberView('home');
         await renderCollectionWorkspace();
         return true;
     }
@@ -920,6 +946,7 @@
         document.querySelector('.collection-toolbar').classList.remove('oculto');
         document.querySelector('.app-header').classList.remove('oculto');
         document.getElementById('openCameraToolBtn').textContent = 'Tomar fotos';
+        rememberView('collection');
         renderCollectionWorkspace(); updateUI();
         return true;
     }
@@ -1083,6 +1110,7 @@
         } catch (error) { showToast(`❌ No se pudieron cargar los productos de la colección: ${error.message}`); }
     }
     function enterProductEditor(item) {
+        rememberView('editor', item.id);
         editorReturnToDashboard = captureWorkspace.classList.contains('oculto');
         collectionDashboard.classList.add('oculto');
         captureWorkspace.classList.remove('oculto');
@@ -1620,15 +1648,17 @@
         });
     }
     function syncCameraControls() {
-        const modes = Array.isArray(cameraCapabilities.exposureMode) ? cameraCapabilities.exposureMode : [];
         const whiteBalanceModes = Array.isArray(cameraCapabilities.whiteBalanceMode) ? cameraCapabilities.whiteBalanceMode : [];
         const exposureRange = cameraCapabilities.exposureCompensation;
         const colorTemperatureRange = cameraCapabilities.colorTemperature;
+        const exposureTimeRange = cameraCapabilities.exposureTime;
         const hasTorch = Boolean(cameraCapabilities.torch);
         flashBtn.classList.toggle('oculto', !hasTorch);
         flashBtn.classList.toggle('active', flashEnabled);
         flashBtn.setAttribute('aria-pressed', String(flashEnabled));
         const hasExposureControl = exposureRange && Number.isFinite(exposureRange.min) && Number.isFinite(exposureRange.max);
+        const hasExposureGesture = hasExposureControl || (exposureTimeRange
+            && Number.isFinite(exposureTimeRange.min) && Number.isFinite(exposureTimeRange.max));
         const hasWhiteBalanceControl = colorTemperatureRange
             && Number.isFinite(colorTemperatureRange.min)
             && Number.isFinite(colorTemperatureRange.max)
@@ -1636,19 +1666,8 @@
         const whiteBalanceLabel = whiteBalanceSelect.closest('label');
         whiteBalanceLabel.classList.toggle('oculto', !hasWhiteBalanceControl);
         whiteBalanceSelect.disabled = !hasWhiteBalanceControl;
-        advancedToggleBtn.classList.toggle('oculto', !hasExposureControl && !hasWhiteBalanceControl);
-        exposureSlider.disabled = !hasExposureControl;
-        if (hasExposureControl) {
-            exposureSlider.min = exposureRange.min;
-            exposureSlider.max = exposureRange.max;
-            exposureSlider.step = exposureRange.step || 0.1;
-            const current = cameraTrack.getSettings ? cameraTrack.getSettings().exposureCompensation : 0;
-            exposureSlider.value = Number.isFinite(current) ? current : 0;
-            exposureValue.textContent = Number(exposureSlider.value).toFixed(1);
-        } else {
-            exposureSlider.value = '0';
-            exposureValue.textContent = '0';
-        }
+        advancedToggleBtn.classList.toggle('oculto', !hasExposureGesture && !hasWhiteBalanceControl);
+        advancedToggleBtn.textContent = hasWhiteBalanceControl ? 'Ajustes' : 'Gesto';
         gridToggleBtn.classList.toggle('active', compositionGridEnabled);
         gridToggleBtn.setAttribute('aria-pressed', String(compositionGridEnabled));
     }
@@ -1663,12 +1682,6 @@
     advancedToggleBtn.addEventListener('click', () => {
         const isOpen = advancedControls.classList.toggle('oculto') === false;
         advancedToggleBtn.setAttribute('aria-expanded', String(isOpen));
-    });
-    exposureSlider.addEventListener('input', () => { exposureValue.textContent = Number(exposureSlider.value).toFixed(1); });
-    exposureSlider.addEventListener('change', async () => {
-        if (!cameraTrack) return;
-        try { await cameraTrack.applyConstraints({ advanced: [{ exposureCompensation: Number(exposureSlider.value) }] }); }
-        catch (error) { showToast(`❌ No se pudo ajustar la exposición: ${error.message}`); syncCameraControls(); }
     });
     gridToggleBtn.addEventListener('click', () => {
         compositionGridEnabled = !compositionGridEnabled;
@@ -1720,35 +1733,50 @@
             showToast(`❌ No se pudo ajustar la exposición: ${error.message}`);
         }
     }
+    async function applyExposureTime(value) {
+        if (!cameraTrack) return;
+        try {
+            await cameraTrack.applyConstraints({ advanced: [{ exposureTime: value }] });
+        } catch (error) {
+            showToast(`❌ No se pudo ajustar la exposición: ${error.message}`);
+        }
+    }
     async function lockFocusAndExposure() {
         if (!cameraTrack) return;
         const focusModes = Array.isArray(cameraCapabilities.focusMode) ? cameraCapabilities.focusMode : [];
         const exposureModes = Array.isArray(cameraCapabilities.exposureMode) ? cameraCapabilities.exposureMode : [];
         const settings = cameraTrack.getSettings ? cameraTrack.getSettings() : {};
         const constraints = {};
-        if (focusModes.includes('manual')) {
-            constraints.focusMode = 'manual';
-            if (Number.isFinite(settings.focusDistance)) constraints.focusDistance = settings.focusDistance;
+        const focusMode = focusModes.includes('manual') ? 'manual' : focusModes.includes('single-shot') ? 'single-shot' : null;
+        if (focusMode) {
+            constraints.focusMode = focusMode;
+            if (focusMode === 'manual' && Number.isFinite(settings.focusDistance)) constraints.focusDistance = settings.focusDistance;
         }
-        if (exposureModes.includes('manual') && exposureModes.includes('continuous')) {
+        const exposureTimeRange = cameraCapabilities.exposureTime;
+        if (exposureModes.includes('manual') && exposureModes.includes('continuous')
+            && exposureTimeRange && Number.isFinite(settings.exposureTime)) {
             constraints.exposureMode = 'manual';
-            if (Number.isFinite(settings.exposureTime)) constraints.exposureTime = settings.exposureTime;
+            constraints.exposureTime = settings.exposureTime;
         }
         if (!Object.keys(constraints).length) {
             showFocusHint('El bloqueo de enfoque/exposición no está disponible en esta cámara.');
-            return;
+            return { focusLocked: false, exposureLocked: false };
         }
         try {
             await cameraTrack.applyConstraints({ advanced: [constraints] });
-            const focusLocked = focusModes.includes('manual');
-            const exposureLocked = exposureModes.includes('manual');
+            const focusLocked = Boolean(focusMode);
+            const exposureLocked = constraints.exposureMode === 'manual';
             showFocusHint(focusLocked && exposureLocked ? 'Enfoque y exposición bloqueados' : focusLocked ? 'Enfoque bloqueado' : 'Exposición bloqueada');
+            return { focusLocked, exposureLocked };
         } catch (error) {
             showToast(`❌ No se pudo bloquear enfoque/exposición: ${error.message}`);
+            return { focusLocked: false, exposureLocked: false };
         }
     }
+    viewWrapper.addEventListener('contextmenu', event => event.preventDefault());
     video.addEventListener('pointerdown', event => {
         if (!cameraTrack || (state !== 'capturing' && state !== 'retaking') || event.button > 0) return;
+        event.preventDefault();
         const bounds = viewWrapper.getBoundingClientRect();
         cameraGesture = {
             pointerId: event.pointerId,
@@ -1757,6 +1785,10 @@
             reticleX: event.clientX - bounds.left,
             reticleY: event.clientY - bounds.top,
             startExposure: Number(cameraTrack.getSettings?.().exposureCompensation) || 0,
+            startExposureTime: Number(cameraTrack.getSettings?.().exposureTime),
+            currentExposure: Number(cameraTrack.getSettings?.().exposureCompensation) || 0,
+            currentExposureTime: Number(cameraTrack.getSettings?.().exposureTime),
+            exposureLocked: false,
             locked: false
         };
         video.setPointerCapture(event.pointerId);
@@ -1764,7 +1796,8 @@
             if (!cameraGesture) return;
             cameraGesture.locked = true;
             showFocusReticle(cameraGesture.reticleX, cameraGesture.reticleY);
-            await lockFocusAndExposure();
+            const lockState = await lockFocusAndExposure();
+            if (cameraGesture) cameraGesture.exposureLocked = Boolean(lockState?.exposureLocked);
         }, 450);
     });
     video.addEventListener('pointermove', event => {
@@ -1776,12 +1809,23 @@
             }
             return;
         }
+        const width = Math.max(viewWrapper.getBoundingClientRect().width, 1);
+        const movement = (event.clientX - cameraGesture.startX) / width;
+        const exposureTimeRange = cameraCapabilities.exposureTime;
+        if (cameraGesture.exposureLocked && exposureTimeRange
+            && Number.isFinite(exposureTimeRange.min) && Number.isFinite(exposureTimeRange.max)
+            && Number.isFinite(cameraGesture.startExposureTime) && cameraGesture.startExposureTime > 0) {
+            const value = Math.max(exposureTimeRange.min, Math.min(exposureTimeRange.max, cameraGesture.startExposureTime * (2 ** (movement * 4))));
+            cameraGesture.currentExposureTime = value;
+            clearTimeout(exposureApplyTimer);
+            exposureApplyTimer = setTimeout(() => applyExposureTime(value), 70);
+            showFocusHint(`Exposición ${value > cameraGesture.startExposureTime ? '↑' : '↓'}`);
+            return;
+        }
         const range = exposureCompensationRange();
         if (!range) return;
-        const width = Math.max(viewWrapper.getBoundingClientRect().width, 1);
-        const value = Math.max(range.min, Math.min(range.max, cameraGesture.startExposure + ((event.clientX - cameraGesture.startX) / width) * (range.max - range.min)));
-        exposureSlider.value = String(value);
-        exposureValue.textContent = value.toFixed(1);
+        const value = Math.max(range.min, Math.min(range.max, cameraGesture.startExposure + movement * (range.max - range.min)));
+        cameraGesture.currentExposure = value;
         clearTimeout(exposureApplyTimer);
         exposureApplyTimer = setTimeout(() => applyExposureCompensation(value), 70);
         showFocusHint(`Exposición ${value > 0 ? '+' : ''}${value.toFixed(1)}`);
@@ -1801,8 +1845,11 @@
             return;
         }
         clearTimeout(exposureApplyTimer);
-        const range = exposureCompensationRange();
-        if (range) applyExposureCompensation(Number(exposureSlider.value));
+        if (gesture.exposureLocked && Number.isFinite(gesture.currentExposureTime)) {
+            applyExposureTime(gesture.currentExposureTime);
+        } else if (exposureCompensationRange()) {
+            applyExposureCompensation(gesture.currentExposure);
+        }
     };
     video.addEventListener('pointerup', finishCameraGesture);
     video.addEventListener('pointercancel', finishCameraGesture);
