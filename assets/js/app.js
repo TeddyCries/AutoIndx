@@ -62,6 +62,7 @@ const editorBanner = document.getElementById('editorBanner');
 const preparingOverlay = document.getElementById('preparingOverlay');
 const preparingTitle = document.getElementById('preparingTitle');
 const preparingStatus = document.getElementById('preparingStatus');
+const preparingProgress = document.getElementById('preparingProgress');
 
 const DB_NAME = "MisFotosDB";
 const DB_VERSION = 3;
@@ -703,21 +704,27 @@ async function removeImageBackground(blob, onProgress = () => {}) {
 }
 async function preparePackageImages(items) {
     preparingTitle.textContent = 'Generando máscara alfa…';
-    preparingStatus.textContent = 'RMBG 2.0 de Bria AI (CC BY-NC 4.0): descarga inicial de unos 366–513 MB…';
+    preparingStatus.textContent = 'MODNet: descarga inicial del modelo…';
+    preparingProgress.value = 0;
     preparingOverlay.setAttribute('aria-busy', 'true');
     preparingOverlay.classList.remove('oculto');
     await new Promise(resolve => setTimeout(resolve, 40));
+    const total = items.filter(item => !item.fondoEliminado && !item.demo).length;
+    let done = 0;
     try {
         for (let index = 0; index < items.length; index += 1) {
             const item = items[index];
             if (item.fondoEliminado || item.demo) continue;
-            preparingStatus.textContent = `Generando la máscara alfa de la foto ${index + 1} de ${items.length}…`;
+            done += 1;
+            preparingStatus.textContent = `Procesando foto ${done} de ${total}…`;
             const front = await removeImageBackground(item.foto, progress => {
-                preparingStatus.textContent = `Foto ${index + 1} de ${items.length} · frente ${Math.round(progress * 100)}%`;
+                preparingStatus.textContent = `Foto ${done} de ${total} · frente ${Math.round(progress * 100)}%`;
+                preparingProgress.value = ((done - 1) + progress * (item.fotoReverso ? 0.5 : 1)) / total;
             });
             const back = item.fotoReverso
                 ? await removeImageBackground(item.fotoReverso, progress => {
-                    preparingStatus.textContent = `Foto ${index + 1} de ${items.length} · reverso ${Math.round(progress * 100)}%`;
+                    preparingStatus.textContent = `Foto ${done} de ${total} · reverso ${Math.round(progress * 100)}%`;
+                    preparingProgress.value = ((done - 1) + 0.5 + progress * 0.5) / total;
                 })
                 : null;
             const updated = {
@@ -735,6 +742,7 @@ async function preparePackageImages(items) {
     } finally {
         preparingOverlay.setAttribute('aria-busy', 'false');
         preparingOverlay.classList.add('oculto');
+        preparingProgress.value = 0;
         preparingTitle.textContent = 'Generando máscara alfa…';
     }
 }

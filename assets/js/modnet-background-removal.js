@@ -84,10 +84,13 @@ export async function removeBackgroundWithModnet(blob, { resizeForBackgroundRemo
         image = await createImageBitmap(optimizedBlob);
         onProgress(0.02);
         const { ort, session } = await loadModnetSession();
+        onProgress(0.15);
         const input = createModelInput(image, ort.Tensor);
-        onProgress(0.1);
+        onProgress(0.25);
         const output = await session.run({ [session.inputNames[0]]: input });
+        onProgress(0.85);
         const alphaCanvas = createAlphaCanvas(output[session.outputNames[0]]);
+        onProgress(0.92);
 
         const canvas = document.createElement('canvas');
         canvas.width = image.width;
