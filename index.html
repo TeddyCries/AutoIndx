@@ -24,9 +24,8 @@
         .home-shell { display: grid; flex: 1 1 auto; grid-template-rows: auto auto minmax(0, 1fr); gap: 16px; overflow: hidden; padding: 10px 0 0; }
         .home-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: clamp(20px, 5vw, 42px); border: 1px solid var(--line); border-radius: 25px; background: linear-gradient(130deg, rgba(67,214,173,.13), rgba(20,28,37,.95) 57%), var(--surface); }
         .home-hero h2 { margin: 0; font-size: clamp(25px, 6vw, 40px); letter-spacing: -.05em; }
-        .home-hero p { max-width: 500px; margin: 9px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
-        #homeCreatePackageBtn { min-height: 48px; flex: 0 0 auto; border-color: var(--accent); background: var(--accent); color: #082019; }
-        .home-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .home-hero p { max-width: 100%; margin: 9px 0 0; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 1.55; text-overflow: ellipsis; white-space: nowrap; }
+        .home-section-heading { display: flex; align-items: center; gap: 12px; }
         .home-section-heading h3 { margin: 0; font-size: 17px; }
         #collectionGrid { display: grid; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; overflow-y: auto; overscroll-behavior: contain; }
         .collection-entry { position: relative; min-width: 0; }
@@ -35,6 +34,13 @@
         .collection-cover { position: relative; display: grid; place-items: center; overflow: hidden; aspect-ratio: 1.45; background: linear-gradient(145deg, #233c3a, #101820); }
         .collection-cover img { width: 100%; height: 100%; object-fit: cover; }
         .collection-cover .empty-cover { color: rgba(255,255,255,.58); font-size: 36px; }
+        .collection-create-card { height: 100%; border-style: dashed; border-color: rgba(67,214,173,.5); text-align: center; }
+        .collection-create-card:hover { border-color: var(--accent); background: #182720; }
+        .collection-create-cover { background: linear-gradient(145deg, rgba(67,214,173,.14), rgba(20,28,37,.8)); }
+        .collection-create-cover svg { width: 42px; height: 42px; fill: none; stroke: var(--accent); stroke-linecap: round; stroke-width: 1.5; }
+        .collection-create-copy { text-align: center; }
+        .collection-create-copy strong { color: var(--accent); }
+        .collection-create-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .collection-count { position: absolute; right: 10px; bottom: 10px; padding: 6px 9px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: rgba(5,10,14,.75); color: white; font-size: 11px; backdrop-filter: blur(8px); }
         .collection-card-copy { display: grid; gap: 5px; padding: 13px; }
         .collection-card-copy strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
@@ -42,7 +48,7 @@
         .collection-name { cursor: pointer; touch-action: manipulation; }
         .collection-name:active { color: var(--accent); }
         .collection-more-button { position: absolute; z-index: 2; top: 8px; right: 8px; display: grid; place-items: center; width: 42px; min-height: 42px; padding: 0; border-radius: 13px; background: rgba(5,10,14,.82); font-size: 25px; line-height: 1; }
-        .collection-more-menu { position: absolute; z-index: 3; top: 56px; right: 8px; display: grid; min-width: 152px; gap: 6px; padding: 7px; border: 1px solid var(--line); border-radius: 15px; background: #17212b; box-shadow: 0 12px 35px #0009; }
+        .collection-more-menu { position: fixed; z-index: 1010; top: 0; left: 0; display: grid; min-width: 152px; gap: 6px; padding: 7px; border: 1px solid var(--line); border-radius: 15px; background: #17212b; box-shadow: 0 12px 35px #0009; }
         .collection-more-menu button { min-height: 40px; padding: 8px; font-size: 12px; text-align: left; white-space: nowrap; }
         .collection-more-menu .delete-collection-action { color: #ff9aa4; }
         .home-empty { grid-column: 1 / -1; padding: 28px 16px; border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); text-align: center; line-height: 1.6; }
@@ -239,9 +245,9 @@
         .toast { position: fixed; z-index: 2000; right: 16px; bottom: max(20px, env(safe-area-inset-bottom)); left: 16px; width: fit-content; max-width: calc(100vw - 32px); margin: auto; padding: 12px 18px; border: 1px solid var(--line); border-radius: 14px; background: #1e302c; color: white; opacity: 0; pointer-events: none; text-align: center; transition: opacity .2s ease; }
         .toast.show { opacity: 1; }
         @media (max-height: 700px) { body { gap: 6px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } #thumbnails { flex-basis: 52px; max-height: 52px; } #thumbnails img { width: 46px; height: 46px; } #reviewControls { gap: 7px; padding: 9px; } .selection-button { min-height: 52px; } .photo-actions-grid button { min-height: 40px; padding-top: 7px; padding-bottom: 7px; } #captureBtn { width: 58px; height: 58px; min-height: 58px; } #captureBtn::after { width: 38px; height: 38px; } .camera-bottom-controls { bottom: 10px; } }
-        @media (max-width: 620px) { .app-header { align-items: center; } .app-header .app-subtitle { max-width: 170px; line-height: 1.35; } .header-actions { flex-direction: row; align-items: center; gap: 5px; } #countBadge { padding: 5px 8px; font-size: 11px; } #activePackageBadge { display: none; } .template-layout { grid-template-columns: 1fr; grid-template-rows: minmax(0, 40dvh) minmax(0, 1fr); } #templatePreview { max-height: 100%; } .template-fields { min-height: 0; overflow-y: auto; } }
+        @media (max-width: 620px) { .app-header { align-items: center; padding: 0 10px; } .app-header .app-subtitle { max-width: 170px; line-height: 1.35; } .header-actions { flex-direction: row; align-items: center; gap: 5px; } #countBadge { padding: 5px 8px; font-size: 11px; } #activePackageBadge { display: none; } .template-layout { grid-template-columns: 1fr; grid-template-rows: minmax(0, 40dvh) minmax(0, 1fr); } #templatePreview { max-height: 100%; } .template-fields { min-height: 0; overflow-y: auto; } }
         @media (orientation: landscape) and (min-width: 700px) { #captureWorkspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 370px); grid-template-rows: auto minmax(0, 1fr) auto; align-items: stretch; gap: 12px; width: 100%; min-height: 0; } .capture-header { grid-column: 1 / -1; grid-row: 1; width: 100%; } #thumbnails { grid-column: 1; grid-row: 3; width: 100%; } #view-wrapper { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: none; } #controls-container { grid-column: 2; grid-row: 2 / 4; width: 100%; align-self: center; } }
-        @media (max-width: 620px) { .home-hero { align-items: flex-start; flex-direction: column; } #homeCreatePackageBtn { width: 100%; } .collection-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } #collectionGrid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; } .collection-card-copy { padding: 10px; } .collection-card-copy strong { font-size: 13px; } .collection-card-copy span { font-size: 11px; } .collection-toolbar { align-items: stretch; } #collectionNameTitle { flex: 1 0 100%; max-width: none; } .collection-toolbar button, .collection-toolbar label { flex: 1 1 44%; padding: 9px; font-size: 12px; } #productGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } #actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } #clearDataBtn { grid-column: 1 / -1; } #actions button { min-height: 44px; padding: 7px 5px; font-size: 12px; } #actions button svg { width: 16px; height: 16px; } .capture-header { justify-content: space-between; } }
+        @media (max-width: 620px) { .home-hero { align-items: flex-start; flex-direction: column; } .collection-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } #collectionGrid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; } .collection-card-copy { padding: 10px; } .collection-card-copy strong { font-size: 13px; } .collection-card-copy span { font-size: 11px; } .collection-toolbar { align-items: stretch; } #collectionNameTitle { flex: 1 0 100%; max-width: none; } .collection-toolbar button, .collection-toolbar label { flex: 1 1 44%; padding: 9px; font-size: 12px; } #productGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } #actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } #clearDataBtn { grid-column: 1 / -1; } #actions button { min-height: 44px; padding: 7px 5px; font-size: 12px; } #actions button svg { width: 16px; height: 16px; } .capture-header { justify-content: space-between; } }
         @media (max-width: 620px) {
             .collection-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 9px; border-radius: 18px; }
             #backToLibraryBtn { grid-column: 1; grid-row: 1; flex-direction: row; justify-content: flex-start; gap: 4px; min-height: 42px; padding: 5px 7px; font-size: 10px; white-space: nowrap; }
@@ -255,7 +261,6 @@
             #openCameraToolBtn svg { width: 18px; height: 18px; }
             #openCameraToolBtn span { font-size: 12px; }
             #preparePackageBtn, #templateOpenBtn, #openCameraToolBtn { line-height: 1.1; }
-            .collection-more-menu { right: 0; }
         }
         @media (max-width: 620px) {
             #templateModal { padding: 0; }
@@ -286,16 +291,25 @@
 </head>
 <body>
     <header class="app-header">
-        <div><h1 class="app-title">AutoIndx</h1><p class="app-subtitle">Tu armario, siempre en orden</p></div>
+        <div><h1 class="app-title">AutoIndx</h1></div>
         <div class="header-actions"><span id="activePackageBadge" class="oculto">Sin colección</span><span id="countBadge">0 colecciones</span></div>
     </header>
     <main id="homeView" class="home-shell">
         <section class="home-hero">
-            <div><h2>Mi armario</h2><p>Un lugar bonito y ordenado para tus prendas, colección por colección.</p></div>
-            <button id="homeCreatePackageBtn" type="button">＋ Crear nueva colección</button>
+            <div><h2>Mi armario</h2><p>Gestiona tu inventario.</p></div>
         </section>
-        <div class="home-section-heading"><h3>Mis colecciones</h3><span id="homeCollectionCount" class="app-subtitle">0 colecciones</span></div>
-        <div id="collectionGrid"></div>
+        <div class="home-section-heading">
+            <h3>Mis colecciones</h3>
+            <span id="homeCollectionCount" class="app-subtitle">0 colecciones</span>
+        </div>
+        <div id="collectionGrid">
+            <div class="collection-entry collection-create-entry">
+                <button id="homeCreatePackageBtn" class="collection-card collection-create-card" type="button" aria-label="Crear nueva colección">
+                    <span class="collection-cover collection-create-cover"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 10v28M10 24h28"/></svg></span>
+                    <span class="collection-card-copy collection-create-copy"><strong>Crear colección</strong><span>Organiza nuevas prendas</span></span>
+                </button>
+            </div>
+        </div>
     </main>
     <section id="collectionWorkspace" class="collection-workspace oculto">
         <nav class="collection-toolbar" aria-label="Herramientas de la colección">
@@ -677,6 +691,16 @@
         if (appNavigationStack.length) history.back();
         else if (fallback) fallback();
     }
+    function navigateBackAndWait(fallback) {
+        if (!appNavigationStack.length) {
+            if (fallback) fallback();
+            return Promise.resolve();
+        }
+        return new Promise(resolve => {
+            window.addEventListener('popstate', resolve, { once: true });
+            navigateBack();
+        });
+    }
     window.addEventListener('popstate', async () => {
         const entry = appNavigationStack.pop();
         if (!entry) return;
@@ -835,7 +859,7 @@
             localStorage.setItem('autoindx-active-package', activePackageId);
             await renderCollectionWorkspace();
             updateUI();
-            showToast(`Colección «${name}» creada y añadida al final de la biblioteca.`);
+            showToast(`Colección «${name}» creada.`);
             return item;
         } catch (error) {
             showToast(`❌ No se pudo crear la colección: ${error.message}`);
@@ -922,7 +946,9 @@
         const visiblePackages = packages
             .filter(item => item.id !== 'default' || (productsByPackage.get(item.id) || []).length > 0)
             .sort((left, right) => (left.createdAt || 0) - (right.createdAt || 0));
+        const createCollectionEntry = document.querySelector('.collection-create-entry');
         collectionGrid.replaceChildren();
+        collectionGrid.appendChild(createCollectionEntry);
         document.getElementById('homeCollectionCount').textContent = `${visiblePackages.length} ${visiblePackages.length === 1 ? 'colección' : 'colecciones'}`;
         countBadge.textContent = `${visiblePackages.length} ${visiblePackages.length === 1 ? 'colección' : 'colecciones'}`;
         if (!visiblePackages.length) {
@@ -996,13 +1022,31 @@
                 const opening = menu.classList.contains('oculto');
                 collectionGrid.querySelectorAll('.collection-more-menu').forEach(otherMenu => otherMenu.classList.add('oculto'));
                 collectionGrid.querySelectorAll('.collection-more-button').forEach(button => button.setAttribute('aria-expanded', 'false'));
-                menu.classList.toggle('oculto', !opening);
+                if (opening) {
+                    menu.classList.remove('oculto');
+                    const buttonRect = moreButton.getBoundingClientRect();
+                    const menuRect = menu.getBoundingClientRect();
+                    const margin = 8;
+                    const left = Math.max(margin, Math.min(buttonRect.right - menuRect.width, innerWidth - menuRect.width - margin));
+                    const below = buttonRect.bottom + 6;
+                    const top = below + menuRect.height <= innerHeight - margin
+                        ? below
+                        : Math.max(margin, buttonRect.top - menuRect.height - 6);
+                    menu.style.left = `${left}px`;
+                    menu.style.top = `${top}px`;
+                } else {
+                    menu.classList.add('oculto');
+                }
                 moreButton.setAttribute('aria-expanded', String(opening));
             });
             entry.append(card, moreButton, menu);
             collectionGrid.appendChild(entry);
         });
     }
+    collectionGrid.addEventListener('scroll', () => {
+        collectionGrid.querySelectorAll('.collection-more-menu:not(.oculto)').forEach(menu => menu.classList.add('oculto'));
+        collectionGrid.querySelectorAll('.collection-more-button').forEach(button => button.setAttribute('aria-expanded', 'false'));
+    });
     async function renderCollectionLibrary() {
         const allProducts = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
         renderCollectionHome(allProducts);
@@ -1140,10 +1184,22 @@
     document.getElementById('createPackageCancelBtn').addEventListener('click', () => navigateBack(closePackageNameModal));
     createPackageModal.addEventListener('click', event => { if (event.target === createPackageModal) navigateBack(closePackageNameModal); });
     createPackageConfirmBtn.addEventListener('click', async () => {
-        const succeeded = editingPackageId
-            ? await renamePackageNamed(editingPackageId, newPackageName.value)
-            : Boolean(await createPackageNamed(newPackageName.value));
-        if (succeeded) navigateBack(closePackageNameModal);
+        if (editingPackageId) {
+            const renamed = await renamePackageNamed(editingPackageId, newPackageName.value);
+            if (renamed) navigateBack(closePackageNameModal);
+            return;
+        }
+        const createdPackage = await createPackageNamed(newPackageName.value);
+        if (!createdPackage) return;
+        await navigateBackAndWait(closePackageNameModal);
+        const startTakingPhotos = await askForConfirmation(
+            `Colección «${createdPackage.name}» creada. ¿Quieres empezar a tomar fotos ahora?`,
+            { yesLabel: 'Empezar a tomar fotos', noLabel: 'Ahora no', destructive: false }
+        );
+        if (startTakingPhotos) {
+            enterCollection(createdPackage.id, { prompt: false });
+            openCameraTool();
+        }
     });
     newPackageName.addEventListener('keydown', event => { if (event.key === 'Enter') createPackageConfirmBtn.click(); });
     document.getElementById('preparePackageBtn').addEventListener('click', preparePackageForExport);
