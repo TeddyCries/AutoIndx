@@ -9,8 +9,8 @@
     <style>
         :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b1016; color: #f5f7fa; --surface: #141c25; --surface-raised: #202b37; --muted: #9ba8b7; --accent: #43d6ad; --line: rgba(255,255,255,.1); }
         * { box-sizing: border-box; }
-        html, body { min-height: 100%; margin: 0; }
-        body { min-height: 100dvh; display: flex; flex-direction: column; gap: 10px; padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom)); background: radial-gradient(ellipse at top, #1a2932 0, #0b1016 48%); }
+        html, body { width: 100%; height: 100%; min-height: 0; margin: 0; overflow: hidden; }
+        body { height: 100dvh; display: flex; flex-direction: column; gap: 10px; padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom)); background: radial-gradient(ellipse at top, #1a2932 0, #0b1016 48%); }
         button { min-height: 46px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-raised); color: inherit; font: inherit; font-weight: 650; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         button:active { transform: scale(.98); }
         button:disabled { opacity: .48; cursor: not-allowed; }
@@ -20,15 +20,15 @@
         .app-subtitle { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
         .header-actions { display: flex; align-items: center; gap: 8px; }
         #activePackageBadge { overflow: hidden; max-width: 150px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-        .home-shell, .collection-workspace { width: min(100%, 1060px); margin: 0 auto; }
-        .home-shell { display: grid; gap: 20px; padding: clamp(14px, 3vw, 28px) 0; }
+        .home-shell, .collection-workspace { width: min(100%, 1060px); min-height: 0; margin: 0 auto; }
+        .home-shell { display: grid; flex: 1 1 auto; grid-template-rows: auto auto minmax(0, 1fr); gap: 16px; overflow: hidden; padding: 10px 0 0; }
         .home-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: clamp(20px, 5vw, 42px); border: 1px solid var(--line); border-radius: 25px; background: linear-gradient(130deg, rgba(67,214,173,.13), rgba(20,28,37,.95) 57%), var(--surface); }
         .home-hero h2 { margin: 0; font-size: clamp(25px, 6vw, 40px); letter-spacing: -.05em; }
         .home-hero p { max-width: 500px; margin: 9px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
         #homeCreatePackageBtn { min-height: 48px; flex: 0 0 auto; border-color: var(--accent); background: var(--accent); color: #082019; }
         .home-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .home-section-heading h3 { margin: 0; font-size: 17px; }
-        #collectionGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; }
+        #collectionGrid { display: grid; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; overflow-y: auto; overscroll-behavior: contain; }
         .collection-entry { position: relative; min-width: 0; }
         .collection-card { display: block; width: 100%; overflow: hidden; padding: 0; border-radius: 18px; background: var(--surface); text-align: left; transition: transform .15s ease, border-color .15s ease; }
         .collection-card:hover { transform: translateY(-2px); border-color: rgba(67,214,173,.55); }
@@ -43,12 +43,15 @@
         .collection-name:active { color: var(--accent); }
         .collection-more-button { position: absolute; z-index: 2; top: 8px; right: 8px; display: grid; place-items: center; width: 42px; min-height: 42px; padding: 0; border-radius: 13px; background: rgba(5,10,14,.82); font-size: 25px; line-height: 1; }
         .collection-more-menu { position: absolute; z-index: 3; top: 56px; right: 8px; display: grid; min-width: 152px; gap: 6px; padding: 7px; border: 1px solid var(--line); border-radius: 15px; background: #17212b; box-shadow: 0 12px 35px #0009; }
-        .collection-more-menu button { min-height: 40px; text-align: left; }
+        .collection-more-menu button { min-height: 40px; padding: 8px; font-size: 12px; text-align: left; white-space: nowrap; }
         .collection-more-menu .delete-collection-action { color: #ff9aa4; }
         .home-empty { grid-column: 1 / -1; padding: 28px 16px; border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); text-align: center; line-height: 1.6; }
-        .collection-workspace { display: grid; gap: 14px; padding: 8px 0 20px; }
+        .collection-workspace { display: grid; flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); gap: 10px; overflow: hidden; padding: 0 0 4px; }
+        .collection-workspace.camera-active { grid-template-rows: minmax(0, 1fr); }
         .collection-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
         .collection-toolbar button, .collection-toolbar label { min-height: 42px; }
+        .collection-toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+        .collection-toolbar button svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
         #collectionNameTitle { overflow: hidden; min-width: 140px; max-width: 240px; margin-right: auto; text-overflow: ellipsis; white-space: nowrap; }
         #preparePackageBtn { border-color: rgba(67,214,173,.42); color: var(--accent); }
         #templateOpenBtn { background: #32414f; }
@@ -59,12 +62,13 @@
         .dashboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 12px; }
         .dashboard-heading h2 { margin: 0; font-size: 20px; }
         .dashboard-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-        #productGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 11px; }
+        #collectionDashboard { display: flex; min-height: 0; flex-direction: column; overflow: hidden; }
+        #productGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 11px; overflow-y: auto; overscroll-behavior: contain; }
         .collection-product-empty { grid-column: 1 / -1; padding: 26px; border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); text-align: center; }
         .collection-product-empty button { margin-top: 10px; border-color: var(--accent); color: var(--accent); }
-        #captureWorkspace { width: 100%; }
+        #captureWorkspace { display: flex; width: 100%; min-height: 0; flex: 1 1 auto; flex-direction: column; gap: 8px; overflow: hidden; }
         #countBadge { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; color: var(--accent); font-size: 13px; font-weight: 700; white-space: nowrap; }
-        #thumbnails { display: flex; align-items: center; align-self: center; width: min(100%, 760px); min-height: 70px; overflow-x: auto; gap: 7px; padding: 4px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        #thumbnails { display: flex; flex: 0 1 70px; align-items: center; align-self: center; width: min(100%, 760px); min-height: 0; max-height: 70px; overflow-x: auto; gap: 7px; padding: 4px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         #thumbnails::-webkit-scrollbar { display: none; }
         .thumbnail-container { position: relative; flex: 0 0 auto; padding: 2px; }
         .thumbnail-edit { display: block; min-height: 0; padding: 0; border: 0; background: transparent; }
@@ -74,7 +78,7 @@
         .capture-header { display: flex; align-items: center; gap: 12px; width: min(100%, 760px); margin: 0 auto; }
         .capture-header button { flex: 0 0 auto; border-color: rgba(67,214,173,.42); color: var(--accent); }
         .capture-header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #view-wrapper { position: relative; display: flex; flex: 0 1 min(58dvh, 620px); align-items: center; justify-content: center; width: min(100%, 760px); height: min(58dvh, 620px); min-height: min(250px, 58dvh); max-height: min(58dvh, 620px); margin: 0 auto; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #05080b; box-shadow: 0 18px 55px rgba(0,0,0,.3); }
+        #view-wrapper { position: relative; display: flex; flex: 1 1 0; align-items: center; justify-content: center; width: min(100%, 760px); height: auto; min-height: 0; max-height: none; margin: 0 auto; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #05080b; box-shadow: 0 18px 55px rgba(0,0,0,.3); }
         video, #previewContainer { display: block; flex: 0 1 100%; min-width: 0; min-height: 0; width: 100%; height: 100%; object-fit: cover; }
         video { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         .debug-camera { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 24px; background: radial-gradient(circle at 50% 30%, #28443f, #111a20 70%); text-align: center; }
@@ -103,17 +107,21 @@
         #view-wrapper { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         #whiteBalanceSelect { min-height: 40px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: #111820; color: inherit; font: inherit; }
         .gesture-help { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
-        #controls-container { width: min(100%, 760px); margin: 0 auto; flex-shrink: 0; }
+        #controls-container { width: min(100%, 760px); min-height: 0; margin: 0 auto; flex: 0 1 auto; }
         #reviewControls { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); }
         .selection-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
         .selection-button { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-width: 0; min-height: 64px; padding: 9px 12px; text-align: left; background: #202b37; }
         .selection-label { color: var(--muted); font-size: 11px; font-weight: 600; }
         .selection-value { max-width: 100%; color: white; font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
         .photo-actions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-        .photo-actions-grid button { min-width: 0; padding: 10px 8px; font-size: 13px; }
+        .photo-actions-grid button { display: inline-flex; min-width: 0; align-items: center; justify-content: center; gap: 7px; padding: 10px 8px; font-size: 13px; }
+        .photo-actions-grid button svg { flex: 0 0 auto; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+        #cropActions button:disabled { border-color: #39434e; background: #252e38; color: #8995a2; opacity: 1; }
         #singlePhotoActions button:nth-child(3), #dualPhotoActions button:nth-child(2) { border-color: #40c99e; background: #137c60; }
         #dualRetakeControls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        #actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        #actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+        #actions button { display: inline-flex; min-width: 0; align-items: center; justify-content: center; gap: 7px; padding: 9px; text-align: center; }
+        #actions button svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
         #saveZipBtn { border-color: #2585dd; background: #1767af; }
         #clearDataBtn { background: #a72e3c; }
         .oculto { display: none !important; }
@@ -130,10 +138,23 @@
         .picker-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
         .picker-header h2 { margin: 0; font-size: 21px; }
         #pickerCloseBtn { min-height: 40px; padding: 7px 12px; }
-        #pickerGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(min(100%, 104px), 1fr)); gap: 9px; overflow-y: auto; padding: 2px 3px 6px 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        #pickerGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; overflow-y: auto; padding: 2px 3px 6px 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         #pickerGrid button { min-width: 0; min-height: 58px; padding: 9px 6px; background: #202b37; line-height: 1.25; overflow-wrap: anywhere; white-space: normal; }
+        #pickerGrid[data-type="size"] button { min-height: 48px; padding: 6px 3px; font-size: 12px; line-height: 1.15; }
         #pickerGrid button.selected { border-color: var(--accent); background: var(--accent); color: #082019; }
+        #pickerGrid[data-type="size"] button[data-size-group="clothing"] { border-color: #45617a; background: #26394b; color: #e0efff; }
+        #pickerGrid[data-type="size"] button[data-size-group="months"] { border-color: #34776c; background: #183e39; color: #d7fff4; }
+        #pickerGrid[data-type="size"] button[data-size-group="years"] { border-color: #665287; background: #352b4a; color: #f0e7ff; }
+        #pickerGrid[data-type="size"] button[data-size-group="footwear"] { border-color: #80613c; background: #493724; color: #fff0d8; }
+        #pickerGrid[data-type="size"] button.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
         #templateModal { z-index: 1020; }
+        #templateSettingsModal { z-index: 1030; }
+        .template-settings-dialog { width: min(100%, 520px); max-height: min(85dvh, 720px); overflow-y: auto; padding: 18px; border: 1px solid var(--line); border-radius: 22px; background: #121a23; box-shadow: 0 20px 70px #0008; }
+        .template-settings-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .template-settings-dialog-heading h2 { margin: 0; font-size: 18px; }
+        .template-settings-dialog-heading button { display: grid; width: 40px; min-height: 40px; place-items: center; padding: 0; border-radius: 50%; }
+        .template-settings-dialog-heading button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+        .template-settings-dialog button svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
         #preparingOverlay { z-index: 1040; }
         .manager-current { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: var(--muted); font-size: 13px; }
         .manager-current strong { color: var(--accent); }
@@ -149,33 +170,60 @@
         .managed-product-copy strong { font-size: 12px; }
         .managed-product-copy span { color: var(--muted); font-size: 11px; }
         .manager-note { margin: 15px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
-        .template-panel { display: flex; flex-direction: column; width: min(100%, 1180px); max-height: 100%; margin: auto; padding: clamp(15px, 3vw, 24px); border: 1px solid var(--line); border-radius: 24px; background: #121a23; overflow-y: auto; }
+        .template-panel { display: flex; min-height: 0; flex-direction: column; width: min(100%, 1180px); max-height: 100%; margin: auto; padding: clamp(15px, 3vw, 24px); border: 1px solid var(--line); border-radius: 24px; background: #121a23; overflow: hidden; }
+        #cropModal { padding: 0; }
+        #cropPanel { display: grid; width: min(100%, 900px); height: 100%; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 7px; padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)); border-radius: 0; }
+        #cropPanel .template-heading { align-items: center; }
+        #cropPanel .template-heading h2 { font-size: 18px; }
+        #cropPanel .template-heading p { font-size: 11px; }
+        #cropPanel .template-heading button { display: grid; width: 40px; min-height: 40px; place-items: center; padding: 7px; border-radius: 50%; }
+        #cropPanel .mask-toolbar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-areas: "crop crop restore restore erase erase" "brush brush brush brush brush brush" "undo undo undo reset reset reset"; gap: 6px; margin: 0; }
+        #cropPanel .mask-toolbar button { display: grid; min-width: 0; min-height: 44px; place-items: center; padding: 6px; border-radius: 13px; color: #c4ced8; }
+        #maskCropToolBtn { grid-area: crop; }
+        #maskRestoreToolBtn { grid-area: restore; }
+        #maskEraseToolBtn { grid-area: erase; }
+        #maskUndoBtn { grid-area: undo; }
+        #maskResetBtn { grid-area: reset; }
+        #cropPanel .mask-toolbar button svg, #cropPanel .template-actions button svg, #cropPanel .template-heading button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+        #cropPanel .mask-toolbar button[aria-pressed="true"] { border-color: var(--accent); background: rgba(67,214,173,.18); color: var(--accent); }
+        #cropPanel .mask-toolbar button:disabled { color: #718090; }
+        #cropPanel .mask-toolbar label { display: grid; grid-area: brush; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 9px; min-width: 0; min-height: 34px; margin: 0; font-size: 11px; }
+        #cropPanel .mask-toolbar input[type="range"] { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); }
+        #cropPanel .mask-toolbar button:focus-visible, #cropPanel .template-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        #cropPanel .crop-hint { margin: 0; font-size: 11px; }
+        .crop-canvas-viewport { position: relative; display: grid; min-width: 0; min-height: 0; place-items: center; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background-color: #111820; background-image: linear-gradient(45deg,#26313b 25%,transparent 25%),linear-gradient(-45deg,#26313b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#26313b 75%),linear-gradient(-45deg,transparent 75%,#26313b 75%); background-size: 18px 18px; background-position: 0 0,0 9px,9px -9px,-9px 0; touch-action: none; }
+        #cropPanel #cropCanvas { width: 100%; height: 100%; min-height: 0; max-height: none; border: 0; touch-action: none; user-select: none; -webkit-user-select: none; }
+        #cropZoomIndicator { position: absolute; top: 8px; right: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: rgba(5,10,14,.78); color: #f5f7fa; font-size: 11px; pointer-events: none; }
+        #cropPanel .template-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; }
+        #cropPanel .template-actions button { display: grid; min-width: 0; min-height: 44px; place-items: center; padding: 7px 5px; }
+        #cropPanel #applyCropBtn { border-color: var(--accent); background: var(--accent); color: #082019; }
+        @media (min-width: 700px) { #cropModal { padding: 16px; } #cropPanel { height: min(100%, 900px); border-radius: 24px; } }
         .template-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(270px, .75fr); gap: 16px; min-height: 0; margin-top: 16px; }
         .template-canvas-area { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 8px; }
         .template-canvas-hint { margin: 0; color: var(--muted); font-size: 11px; text-align: center; }
         .template-layer-tools { display: flex; gap: 7px; margin-top: 10px; }
-        .template-layer-tools button { flex: 1; min-height: 40px; padding: 8px 10px; font-size: 12px; }
+        .template-panel button svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+        .template-layer-tools button { display: flex; flex: 1; align-items: center; justify-content: center; gap: 7px; min-width: 0; min-height: 40px; padding: 8px 10px; font-size: 12px; }
         .template-layer-tools button[aria-pressed="true"] { border-color: var(--accent); background: rgba(67,214,173,.15); color: var(--accent); }
         #templatePreview { display: block; width: min(100%, 680px); max-height: 68dvh; aspect-ratio: 1; margin: 0 auto; border: 1px solid var(--line); border-radius: 16px; background-color: #0a0e13; background-image: linear-gradient(45deg,#18212a 25%,transparent 25%),linear-gradient(-45deg,#18212a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#18212a 75%),linear-gradient(-45deg,transparent 75%,#18212a 75%); background-size: 20px 20px; background-position: 0 0,0 10px,10px -10px,-10px 0; object-fit: contain; touch-action: none; cursor: grab; }
         #templatePreview:active { cursor: grabbing; }
         .template-fields { display: grid; align-content: start; gap: 11px; overflow-y: auto; padding: 2px 4px 8px 0; }
-        .template-fields details { padding: 11px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); }
-        .template-fields summary { color: #f5f7fa; font-size: 13px; font-weight: 700; cursor: pointer; }
-        .template-fields details > :not(summary) { margin-top: 11px; }
+        .template-layout { flex: 1 1 auto; }
+        .template-settings-section { display: grid; min-width: 0; gap: 11px; }
+        .template-settings-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+        .template-settings-tools button { display: grid; min-width: 0; min-height: 68px; align-content: center; justify-items: center; gap: 6px; padding: 7px 4px; font-size: 11px; }
+        .template-settings-tools button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
         .template-fields label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; }
         .template-fields input[type="range"] { width: 100%; accent-color: var(--accent); }
         .template-fields input[type="color"] { width: 100%; height: 42px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: #111820; }
         .background-image-control { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; }
         .background-image-status { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
         #templateBackgroundThumb { display: none; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 9px; object-fit: cover; }
-        #templateChooseBackgroundBtn, #removeTemplateBackgroundBtn { min-height: 40px; padding: 8px 10px; font-size: 12px; }
-        .template-fields .template-color-control { display: flex; flex-direction: row; align-items: center; gap: 10px; }
-        .template-color-control span:first-child { flex: 1; }
-        .template-color-control input[type="color"] { width: 48px; height: 40px; }
-        #templateBgColorValue { min-width: 58px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        #templateChooseBackgroundBtn, #removeTemplateBackgroundBtn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 40px; padding: 8px 10px; font-size: 12px; }
         .template-check { display: flex !important; align-items: center; gap: 9px !important; }
         .template-check input { width: 18px; height: 18px; accent-color: var(--accent); }
         .template-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .template-heading .template-actions { flex: 0 0 auto; margin: 0; }
         .mask-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 12px 0; }
         .mask-toolbar button { min-height: 40px; padding: 8px 11px; font-size: 12px; }
         .mask-toolbar button[aria-pressed="true"] { border-color: var(--accent); background: rgba(67,214,173,.15); color: var(--accent); }
@@ -190,10 +238,49 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .toast { position: fixed; z-index: 2000; right: 16px; bottom: max(20px, env(safe-area-inset-bottom)); left: 16px; width: fit-content; max-width: calc(100vw - 32px); margin: auto; padding: 12px 18px; border: 1px solid var(--line); border-radius: 14px; background: #1e302c; color: white; opacity: 0; pointer-events: none; text-align: center; transition: opacity .2s ease; }
         .toast.show { opacity: 1; }
-        @media (max-height: 700px) { body { gap: 6px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } #thumbnails { min-height: 55px; } #thumbnails img { width: 46px; height: 46px; } #view-wrapper { flex-basis: 53dvh; height: 53dvh; min-height: min(180px, 53dvh); max-height: 53dvh; } }
-        @media (max-width: 620px) { .app-header { align-items: flex-start; } .app-header .app-subtitle { max-width: 170px; line-height: 1.35; } .header-actions { flex-direction: column-reverse; align-items: flex-end; gap: 5px; } #countBadge { padding: 5px 8px; font-size: 11px; } #activePackageBadge { max-width: 110px; padding: 5px 8px; font-size: 10px; } .template-layout { grid-template-columns: 1fr; } #templatePreview { max-height: 42dvh; } .template-fields { overflow: visible; } }
+        @media (max-height: 700px) { body { gap: 6px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } #thumbnails { flex-basis: 52px; max-height: 52px; } #thumbnails img { width: 46px; height: 46px; } #reviewControls { gap: 7px; padding: 9px; } .selection-button { min-height: 52px; } .photo-actions-grid button { min-height: 40px; padding-top: 7px; padding-bottom: 7px; } #captureBtn { width: 58px; height: 58px; min-height: 58px; } #captureBtn::after { width: 38px; height: 38px; } .camera-bottom-controls { bottom: 10px; } }
+        @media (max-width: 620px) { .app-header { align-items: center; } .app-header .app-subtitle { max-width: 170px; line-height: 1.35; } .header-actions { flex-direction: row; align-items: center; gap: 5px; } #countBadge { padding: 5px 8px; font-size: 11px; } #activePackageBadge { display: none; } .template-layout { grid-template-columns: 1fr; grid-template-rows: minmax(0, 40dvh) minmax(0, 1fr); } #templatePreview { max-height: 100%; } .template-fields { min-height: 0; overflow-y: auto; } }
         @media (orientation: landscape) and (min-width: 700px) { #captureWorkspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 370px); grid-template-rows: auto minmax(0, 1fr) auto; align-items: stretch; gap: 12px; width: 100%; min-height: 0; } .capture-header { grid-column: 1 / -1; grid-row: 1; width: 100%; } #thumbnails { grid-column: 1; grid-row: 3; width: 100%; } #view-wrapper { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: none; } #controls-container { grid-column: 2; grid-row: 2 / 4; width: 100%; align-self: center; } }
-        @media (max-width: 620px) { .home-hero { align-items: flex-start; flex-direction: column; } #homeCreatePackageBtn { width: 100%; } .collection-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } #collectionGrid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; } .collection-card-copy { padding: 10px; } .collection-card-copy strong { font-size: 13px; } .collection-card-copy span { font-size: 11px; } .collection-toolbar { align-items: stretch; } #collectionNameTitle { flex: 1 0 100%; max-width: none; } .collection-toolbar button, .collection-toolbar label { flex: 1 1 44%; padding: 9px; font-size: 12px; } #productGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-actions > button { flex: 1 1 45%; } .capture-header { justify-content: space-between; } }
+        @media (max-width: 620px) { .home-hero { align-items: flex-start; flex-direction: column; } #homeCreatePackageBtn { width: 100%; } .collection-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } #collectionGrid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; } .collection-card-copy { padding: 10px; } .collection-card-copy strong { font-size: 13px; } .collection-card-copy span { font-size: 11px; } .collection-toolbar { align-items: stretch; } #collectionNameTitle { flex: 1 0 100%; max-width: none; } .collection-toolbar button, .collection-toolbar label { flex: 1 1 44%; padding: 9px; font-size: 12px; } #productGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } #actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } #clearDataBtn { grid-column: 1 / -1; } #actions button { min-height: 44px; padding: 7px 5px; font-size: 12px; } #actions button svg { width: 16px; height: 16px; } .capture-header { justify-content: space-between; } }
+        @media (max-width: 620px) {
+            .collection-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 9px; border-radius: 18px; }
+            #backToLibraryBtn { grid-column: 1; grid-row: 1; flex-direction: row; justify-content: flex-start; gap: 4px; min-height: 42px; padding: 5px 7px; font-size: 10px; white-space: nowrap; }
+            #collectionNameTitle { display: flex; grid-column: 2; grid-row: 1; align-items: center; justify-content: center; min-width: 0; margin: 0; padding: 0 8px; border-left: 1px solid var(--line); font-size: clamp(18px, 5vw, 20px); line-height: 1.2; text-align: center; }
+            #preparePackageBtn { grid-column: 1; grid-row: 2; }
+            #templateOpenBtn { grid-column: 2; grid-row: 2; }
+            #openCameraToolBtn { grid-column: 1 / -1; grid-row: 3; flex-direction: row; min-height: 46px; }
+            .collection-toolbar button { min-width: 0; min-height: 48px; flex-direction: column; gap: 3px; padding: 5px 3px; border-radius: 13px; font-size: 10px; }
+            #backToLibraryBtn svg { width: 15px; height: 15px; }
+            #preparePackageBtn svg, #templateOpenBtn svg { width: 17px; height: 17px; }
+            #openCameraToolBtn svg { width: 18px; height: 18px; }
+            #openCameraToolBtn span { font-size: 12px; }
+            #preparePackageBtn, #templateOpenBtn, #openCameraToolBtn { line-height: 1.1; }
+            .collection-more-menu { right: 0; }
+        }
+        @media (max-width: 620px) {
+            #templateModal { padding: 0; }
+            #templateModal .template-panel { width: 100%; height: 100%; max-height: 100%; gap: 0; padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)); border: 0; border-radius: 0; }
+            #templateModal .template-heading { display: grid; flex: 0 0 auto; grid-template-columns: minmax(0, 1fr) 40px auto; align-items: center; gap: 6px; min-height: 48px; }
+            #templateModal .template-heading h2 { font-size: 17px; }
+            #templateModal .template-heading p { font-size: 11px; }
+            #templateModal .template-heading button { min-height: 40px; padding: 7px 9px; }
+            #templateModal .template-layout { display: grid; flex: 1 1 auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 42dvh) minmax(0, 1fr); gap: 7px; margin-top: 6px; }
+            #templateModal .template-canvas-area { grid-row: 1; min-height: 0; }
+            #templateModal #templatePreview { width: min(100%, 38dvh); height: auto; max-height: 100%; aspect-ratio: 1; }
+            #templateModal .template-canvas-hint { font-size: 10px; }
+            #templateModal .template-fields { display: grid; grid-row: 2; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 8px; height: 100%; min-height: 0; overflow-y: auto; padding: 7px 0 10px; border-top: 1px solid var(--line); overscroll-behavior: contain; }
+            #templateModal .template-layer-tools { grid-column: 1 / -1; gap: 6px; margin: 0; }
+            #templateModal .template-layer-tools button { min-height: 42px; gap: 5px; padding: 6px 4px; font-size: 11px; }
+            #templateModal .template-heading .template-actions { display: block; width: 40px; margin: 0; }
+            #templateModal .template-heading .template-actions button { display: grid; width: 40px; min-width: 40px; min-height: 40px; place-items: center; padding: 0; border-color: var(--accent); border-radius: 50%; background: var(--accent); color: #082019; }
+            #templateModal .template-actions button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
+            #templateModal .template-panel button svg { width: 17px; height: 17px; }
+            #templateSettingsModal { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+            #templateSettingsModal .template-settings-dialog { width: 100%; max-height: 82dvh; padding: 16px; border-radius: 20px; }
+            #templateSettingsModal .template-settings-section { gap: 12px; }
+            #templateModal .background-image-control { grid-template-columns: minmax(0, 1fr) auto; }
+            #templateModal #templateChooseBackgroundBtn, #templateModal #removeTemplateBackgroundBtn { max-width: 100%; padding: 7px; font-size: 11px; }
+        }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
     </style>
 </head>
@@ -212,17 +299,17 @@
     </main>
     <section id="collectionWorkspace" class="collection-workspace oculto">
         <nav class="collection-toolbar" aria-label="Herramientas de la colección">
-            <button id="backToLibraryBtn" type="button">← Mi armario</button>
+            <button id="backToLibraryBtn" type="button" aria-label="Volver a Mi armario" title="Volver a Mi armario"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6M9 12h12"/></svg><span>Mi armario</span></button>
             <strong id="collectionNameTitle">Colección</strong>
-            <button id="preparePackageBtn" type="button">Quitar fondos</button>
-            <button id="templateOpenBtn" type="button">Diseñar fotos</button>
-            <button id="openCameraToolBtn" type="button">Tomar fotos</button>
+            <button id="preparePackageBtn" type="button" aria-label="Preparar fotos" title="Preparar fotos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 8-9 8 9H4Z"/><path d="m8 12 4 4 4-4"/><path d="M19 3v4m-2-2h4"/></svg><span>Preparar fotos</span></button>
+            <button id="templateOpenBtn" type="button" aria-label="Diseñar fotos" title="Diseñar fotos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M3 12h18"/></svg><span>Diseñar fotos</span></button>
+            <button id="openCameraToolBtn" type="button" aria-label="Tomar fotos" title="Tomar fotos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10H2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></svg><span>Tomar fotos</span></button>
         </nav>
         <div id="collectionDashboard">
-            <div class="dashboard-heading"><div><h2>Tus prendas</h2><p>Toca una foto para verla y retocarla.</p></div></div>
             <div id="productGrid"></div>
             <div id="actions" class="dashboard-actions oculto">
-                <button id="saveZipBtn" type="button">Descargar fotos (0)</button>
+                <button id="saveZipBtn" type="button" aria-label="Descargar fotos originales y datos en ZIP" title="Descargar fotos originales y datos en ZIP"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 16v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"/></svg><span>Fotos originales</span></button>
+                <button id="exportRenderedBtn" type="button" aria-label="Exportar fotos con el fondo procesado" title="Exportar fotos con el fondo procesado"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M4 20h16"/></svg><span>Exportar fotos</span></button>
                 <button id="clearDataBtn" type="button">Vaciar colección</button>
             </div>
             <p id="managerStatus" class="manager-note" role="status" aria-live="polite">Toca «Tomar fotos» para añadir prendas.</p>
@@ -271,27 +358,39 @@
         <div id="reviewControls" class="oculto">
         <div id="editorBanner" class="manager-current oculto"><strong>Edita tu prenda</strong><span>Retoca la foto y cambia la talla o el precio.</span></div>
         <div id="dualRetakeControls" class="photo-actions-grid oculto">
-            <button id="retakeFrontalBtn" style="background-color: #ffc107; color: #212529;">Retomar Frontal</button>
-            <button id="retakeReversoBtn" style="background-color: #ffc107; color: #212529;">Retomar Reverso</button>
+            <button id="retakeFrontalBtn" type="button" aria-label="Retomar foto frontal" title="Retomar foto frontal" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Retomar frontal</span></button>
+            <button id="retakeReversoBtn" type="button" aria-label="Retomar foto reverso" title="Retomar foto reverso" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Retomar reverso</span></button>
         </div>
         <div class="selection-row">
             <button id="sizePickerBtn" class="selection-button" type="button"><span class="selection-label">TALLA</span><span id="sizePickerValue" class="selection-value">Selecciona talla</span></button>
             <button id="pricePickerBtn" class="selection-button" type="button"><span class="selection-label">PRECIO</span><span id="pricePickerValue" class="selection-value">Selecciona precio</span></button>
         </div>
         <div id="cropActions" class="photo-actions-grid">
-            <button id="cropFrontBtn" type="button">Retocar recorte frontal</button>
-            <button id="cropBackBtn" class="oculto" type="button">Retocar recorte trasero</button>
+            <button id="cropFrontBtn" type="button" aria-label="Retocar recorte frontal" title="Retocar recorte frontal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v13a2 2 0 0 0 2 2h11M16 3v5M3 8h13a2 2 0 0 1 2 2v11"/></svg><span>Frontal</span></button>
+            <button id="cropBackBtn" type="button" aria-label="Retocar recorte reverso" title="Retocar recorte reverso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v13a2 2 0 0 0 2 2h11M16 3v5M3 8h13a2 2 0 0 1 2 2v11"/></svg><span>Reverso</span></button>
         </div>
         <div id="row" class="oculto">
             <select id="sizeSelect">
             <option value="">Selecciona talla</option>
+            <optgroup label="Ropa" data-size-group="clothing">
             <option>CH</option><option>M</option><option>L/G</option><option>XL</option>
             <option>0XL</option><option>1XL</option><option>2XL</option><option>3XL</option>
             <option>4XL</option><option>5XL</option><option>6XL</option><option>7XL</option>
+            </optgroup>
 
+            <optgroup label="Meses" data-size-group="months">
             <option>0-3 Meses</option><option>3-6 Meses</option><option>6-9 Meses</option>
             <option>9-12 Meses</option><option>12-18 Meses</option><option>18-24 Meses</option>
+            </optgroup>
 
+            <optgroup label="Años" data-size-group="years">
+            <option>2 Años</option><option>3 Años</option><option>4 Años</option><option>5 Años</option>
+            <option>6 Años</option><option>7 Años</option><option>8 Años</option><option>9 Años</option>
+            <option>10 Años</option><option>11 Años</option><option>12 Años</option><option>13 Años</option>
+            <option>14 Años</option><option>15 Años</option><option>16 Años</option>
+            </optgroup>
+
+            <optgroup label="Calzado MX/US" data-size-group="footwear">
             <option>1 MX/22 US</option><option>2 MX/23 US</option><option>3 MX/24 US</option>
             <option>4 MX/25 US</option><option>5 MX/26 US</option><option>6 MX/27 US</option>
             <option>7 MX/28 US</option><option>8 MX/29 US</option><option>9 MX/30 US</option>
@@ -301,6 +400,7 @@
             <option>19 MX/40 US</option><option>20 MX/41 US</option><option>21 MX/42 US</option>
             <option>22 MX/43 US</option><option>23 MX/44 US</option><option>24 MX/45 US</option>
             <option>25 MX/46 US</option><option>26 MX/47 US</option><option>27 MX/48 US</option>
+            </optgroup>
 
             </select>
             <select id="priceSelect">
@@ -310,15 +410,15 @@
             </select>
         </div>
         <div id="singlePhotoActions" class="photo-actions-grid oculto">
-            <button id="addReversoBtn" style="background-color: #17a2b8;">Añadir Reverso</button>
-            <button id="retakeSingleBtn" style="background-color: #ffc107; color: #212529;">Retomar</button>
-            <button id="saveSingleBtn" style="background-color: #28a745;">Guardar</button>
-            <button id="cancelSingleBtn" style="background-color:#555;">Cancelar</button>
+            <button id="addReversoBtn" type="button" aria-label="Añadir foto de reverso" title="Añadir foto de reverso" style="background-color: #17a2b8;"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20M12 8v6m-3-3h6"/></svg><span>Añadir reverso</span></button>
+            <button id="retakeSingleBtn" type="button" aria-label="Retomar foto" title="Retomar foto" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Retomar</span></button>
+            <button id="saveSingleBtn" type="button" aria-label="Guardar foto" title="Guardar foto" style="background-color: #28a745;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Guardar</span></button>
+            <button id="cancelSingleBtn" type="button" aria-label="Cancelar edición" title="Cancelar edición" style="background-color:#555;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span>Cancelar</span></button>
         </div>
         <div id="dualPhotoActions" class="photo-actions-grid oculto">
-            <button id="deleteReversoBtn" style="background-color: #dc3545;">Eliminar Reverso</button>
-            <button id="saveDualBtn" style="background-color: #28a745;">Guardar</button>
-            <button id="cancelDualBtn" style="background-color:#555;">Cancelar</button>
+            <button id="deleteReversoBtn" type="button" aria-label="Eliminar foto reverso" title="Eliminar foto reverso" style="background-color: #dc3545;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6"/><path d="M10 11v5m4-5v5"/></svg><span>Eliminar reverso</span></button>
+            <button id="saveDualBtn" type="button" aria-label="Guardar fotos" title="Guardar fotos" style="background-color: #28a745;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Guardar</span></button>
+            <button id="cancelDualBtn" type="button" aria-label="Cancelar edición" title="Cancelar edición" style="background-color:#555;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span>Cancelar</span></button>
         </div>
         </div>
     </div>
@@ -349,7 +449,7 @@
         </div>
         <div id="templateModal" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="templateTitle">
             <section class="template-panel">
-                <div class="template-heading"><div><h2 id="templateTitle">Diseña tus fotos</h2><p>Elige qué mover y acomódalo a tu gusto. Tus cambios se guardan automáticamente.</p></div><button id="templateCloseBtn" type="button">← Volver</button></div>
+                <div class="template-heading"><div><h2 id="templateTitle">Diseña tus fotos</h2><p>Mueve los elementos y ajusta tu diseño.</p></div><div class="template-actions"><button id="saveTemplateBtn" type="button" aria-label="Guardar diseño" title="Guardar diseño"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l4 4v14H3V3h2Z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/></svg><span>Guardar</span></button></div><button id="templateCloseBtn" type="button" aria-label="Volver" title="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6M9 12h12"/></svg><span>Volver</span></button></div>
                 <div class="template-layout">
                     <div class="template-canvas-area">
                         <canvas id="templatePreview" width="600" height="600" aria-label="Lienzo de diseño de la plantilla"></canvas>
@@ -357,54 +457,60 @@
                     </div>
                     <div class="template-fields">
                         <div class="template-layer-tools" role="toolbar" aria-label="Seleccionar elemento">
-                            <button id="templateSelectProductBtn" type="button" aria-pressed="true">Prenda</button>
-                            <button id="templateSelectTextBtn" type="button" aria-pressed="false">Talla y precio</button>
+                            <button id="templateSelectProductBtn" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 17l8 4 8-4"/></svg><span>Prenda</span></button>
+                            <button id="templateSelectTextBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h16v2M12 4v16M8 20h8"/></svg><span>Talla y precio</span></button>
                         </div>
-                        <details open>
-                            <summary>Fondo</summary>
-                            <div class="background-image-control">
-                                <img id="templateBackgroundThumb" alt="">
-                                <span id="templateBackgroundStatus" class="background-image-status">Sin imagen de fondo</span>
-                                <button id="templateChooseBackgroundBtn" type="button">＋ Subir imagen</button>
-                                <input id="templateBackgroundInput" class="oculto" type="file" accept="image/*">
-                                <button id="removeTemplateBackgroundBtn" class="oculto" type="button">Quitar imagen</button>
-                            </div>
-                            <label class="template-color-control"><span>Color de fondo</span><input id="templateBgColor" type="color" value="#340000"><span id="templateBgColorValue">#340000</span></label>
-                        </details>
-                        <details open>
-                            <summary>Prenda</summary>
-                            <label>Tamaño <span id="templateProductScaleValue">100%</span><input id="templateProductScale" type="range" min="50" max="160" step="2" value="100"></label>
-                            <label>Margen <span id="templateMarginValue">2.5%</span><input id="templateMargin" type="range" min="1" max="12" step="0.5" value="2.5"></label>
-                        </details>
-                        <details open>
-                            <summary>Talla y precio</summary>
-                            <label>Color<input id="templateTextColor" type="color" value="#ffffff"></label>
-                            <label>Tamaño <span id="templateFontSizeValue">192 px</span><input id="templateFontSize" type="range" min="90" max="340" step="2" value="192"></label>
-                            <label>Fuente TTF/OTF<input id="templateFontInput" type="file" accept=".ttf,.otf,font/ttf,font/otf"></label>
-                            <label class="template-check"><input id="templateJeansAge" type="checkbox"><span>Mostrar tallas MX/US como años (ej. 6 Años)</span></label>
-                        </details>
-                        <div class="template-actions"><button id="saveTemplateBtn" type="button">Guardar diseño</button><button id="exportRenderedBtn" type="button">Descargar fotos</button></div>
+                        <div class="template-settings-tools" role="group" aria-label="Ajustes de plantilla">
+                            <button type="button" data-template-settings="background"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><circle cx="9" cy="10" r="2"/><path d="m4 17 5-4 3 2 3-3 5 5"/></svg><span>Fondo</span></button>
+                            <button type="button" data-template-settings="product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="m4 12 8 4 8-4M4 17l8 4 8-4"/></svg><span>Prenda</span></button>
+                            <button type="button" data-template-settings="text"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h16v2M12 4v16M8 20h8"/></svg><span>Talla y precio</span></button>
+                        </div>
                     </div>
                 </div>
             </section>
         </div>
-        <div id="cropModal" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
-            <section class="template-panel" style="width:min(100%,760px)">
-                <div class="template-heading"><div><h2 id="cropTitle">Retoca el recorte</h2><p>Recupera una parte de la prenda o borra lo que sobra.</p></div><button id="cropCloseBtn" type="button">← Volver</button></div>
-                <div class="mask-toolbar" role="toolbar" aria-label="Herramientas para retocar el recorte">
-                    <button id="maskCropToolBtn" type="button" aria-pressed="false">Recorte</button>
-                    <button id="maskRestoreToolBtn" type="button" aria-pressed="true">Recuperar</button>
-                    <button id="maskEraseToolBtn" type="button" aria-pressed="false">Borrar fondo</button>
-                    <label>Tamaño del pincel <span id="maskBrushSizeValue">36 px</span><input id="maskBrushSize" type="range" min="8" max="180" step="2" value="36"></label>
-                    <button id="maskUndoBtn" type="button" disabled>Deshacer</button>
-                    <button id="maskResetBtn" type="button">Borrar retoques</button>
-                </div>
-                <p id="maskEditorHint" class="crop-hint">Pinta sobre la prenda para recuperar zonas transparentes.</p>
-                <canvas id="cropCanvas" width="800" height="600"></canvas>
-                <div class="template-actions"><button id="applyCropBtn" type="button">Aplicar cambios</button><button id="restoreImageBtn" type="button">Volver a la foto original</button></div>
+        <div id="templateSettingsModal" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="templateSettingsTitle">
+            <section class="template-settings-dialog">
+                <div class="template-settings-dialog-heading"><h2 id="templateSettingsTitle">Ajustes</h2><button id="templateSettingsCloseBtn" type="button" aria-label="Cerrar ajustes" title="Cerrar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+                <section id="templateBackgroundSettings" class="template-settings-section oculto" aria-label="Fondo">
+                            <div class="background-image-control">
+                                <img id="templateBackgroundThumb" alt="">
+                                <span id="templateBackgroundStatus" class="background-image-status">Sin imagen de fondo</span>
+                                <button id="templateChooseBackgroundBtn" type="button" aria-label="Subir imagen de fondo" title="Subir imagen de fondo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span>Subir imagen</span></button>
+                                <input id="templateBackgroundInput" class="oculto" type="file" accept="image/*">
+                                <button id="removeTemplateBackgroundBtn" class="oculto" type="button" aria-label="Quitar imagen de fondo" title="Quitar imagen de fondo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6"/><path d="m10 11 4 4m0-4-4 4"/></svg><span>Quitar</span></button>
+                            </div>
+                </section>
+                <section id="templateProductSettings" class="template-settings-section oculto" aria-label="Prenda">
+                            <label>Tamaño <span id="templateProductScaleValue">100%</span><input id="templateProductScale" type="range" min="50" max="160" step="2" value="100"></label>
+                            <label>Margen <span id="templateMarginValue">2.5%</span><input id="templateMargin" type="range" min="1" max="12" step="0.5" value="2.5"></label>
+                </section>
+                <section id="templateTextSettings" class="template-settings-section oculto" aria-label="Talla y precio">
+                            <label>Color<input id="templateTextColor" type="color" value="#ffffff"></label>
+                            <label>Tamaño <span id="templateFontSizeValue">192 px</span><input id="templateFontSize" type="range" min="90" max="340" step="2" value="192"></label>
+                </section>
             </section>
         </div>
-        <div id="preparingOverlay" class="modal-overlay oculto" role="alert" aria-live="assertive">
+        <div id="cropModal" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+            <section id="cropPanel" class="template-panel">
+                <div class="template-heading"><div><h2 id="cropTitle">Retoca el recorte</h2><p>Pellizca para acercar y arrastra para retocar.</p></div><button id="cropCloseBtn" type="button" aria-label="Volver" title="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+                <div class="crop-canvas-viewport">
+                    <canvas id="cropCanvas" width="800" height="600"></canvas>
+                    <span id="cropZoomIndicator" aria-live="polite">100%</span>
+                </div>
+                <p id="maskEditorHint" class="crop-hint">Pinta sobre la prenda para recuperar zonas transparentes.</p>
+                <div class="mask-toolbar" role="toolbar" aria-label="Herramientas para retocar el recorte">
+                    <button id="maskCropToolBtn" type="button" aria-label="Recortar" title="Recortar" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v13a2 2 0 0 0 2 2h11M16 3v5M3 8h13a2 2 0 0 1 2 2v11"/></svg></button>
+                    <button id="maskRestoreToolBtn" type="button" aria-label="Recuperar partes" title="Recuperar partes" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4.5-1L19 8.5 15.5 5 5 15.5 4 20Z"/><path d="m8 19 7-7"/></svg></button>
+                    <button id="maskEraseToolBtn" type="button" aria-label="Borrar fondo" title="Borrar fondo" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 14 8-10a2 2 0 0 1 3 0l7 6a2 2 0 0 1 0 3l-8 7H8l-5-3a2 2 0 0 1 0-3Z"/><path d="m8 20 7-9"/></svg></button>
+                    <label id="maskBrushControl">Tamaño <span id="maskBrushSizeValue">36 px</span><input id="maskBrushSize" type="range" min="8" max="180" step="2" value="36"></label>
+                    <button id="maskUndoBtn" type="button" disabled aria-label="Deshacer" title="Deshacer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 14-5-5 5-5M4 9h9a6 6 0 0 1 0 12h-2"/></svg></button>
+                    <button id="maskResetBtn" type="button" aria-label="Borrar retoques" title="Borrar retoques"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 1-2.4-5.7L20 9"/></svg></button>
+                </div>
+                <div class="template-actions"><button id="applyCropBtn" type="button" aria-label="Aplicar cambios" title="Aplicar cambios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></button><button id="restoreImageBtn" type="button" aria-label="Volver a la foto original" title="Volver a la foto original"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button></div>
+            </section>
+        </div>
+        <div id="preparingOverlay" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="preparingTitle" aria-describedby="preparingStatus" aria-live="assertive" aria-busy="false">
             <div class="preparing-panel"><div class="preparing-spinner" aria-hidden="true"></div><h2 id="preparingTitle">Mejorando tus fotos…</h2><p id="preparingStatus">Quitando el fondo. Puedes seguir aquí mientras terminamos.</p></div>
         </div>
     <div id="toast-notification" class="toast oculto"></div>
@@ -475,8 +581,6 @@
     const templateBackgroundStatus = document.getElementById('templateBackgroundStatus');
     const templateBackgroundThumb = document.getElementById('templateBackgroundThumb');
     const removeTemplateBackgroundBtn = document.getElementById('removeTemplateBackgroundBtn');
-    const templateBgColor = document.getElementById('templateBgColor');
-    const templateBgColorValue = document.getElementById('templateBgColorValue');
     const templateTextColor = document.getElementById('templateTextColor');
     const templateFontSize = document.getElementById('templateFontSize');
     const templateFontSizeValue = document.getElementById('templateFontSizeValue');
@@ -484,7 +588,6 @@
     const templateProductScaleValue = document.getElementById('templateProductScaleValue');
     const templateMargin = document.getElementById('templateMargin');
     const templateMarginValue = document.getElementById('templateMarginValue');
-    const templateJeansAge = document.getElementById('templateJeansAge');
     const templateSelectProductBtn = document.getElementById('templateSelectProductBtn');
     const templateSelectTextBtn = document.getElementById('templateSelectTextBtn');
     const cropModal = document.getElementById('cropModal');
@@ -536,15 +639,20 @@
     let collectionPressTimer = null;
     let suppressCollectionOpen = false;
     let activePackageId = localStorage.getItem('autoindx-active-package') || 'default';
-    let templateSettings = { bgColor: '#340000', textColor: '#ffffff', fontSize: 192, margin: 2.5, jeansAge: false, background: null, fontBlob: null, productOffsetX: 0, productOffsetY: 0, productScale: 1, textOffsetX: 0, textOffsetY: 0 };
+    let templateSettings = { bgColor: '#340000', textColor: '#ffffff', fontSize: 192, margin: 2.5, background: null, productOffsetX: 0, productOffsetY: 0, productScale: 1, textOffsetX: 0, textOffsetY: 0 };
     let templateBackgroundUrl = null;
-    let loadedTemplateFont = null;
     let cropTarget = null;
     let cropImage = null;
     let cropOriginalImage = null;
     let cropRect = null;
     let cropStart = null;
     let cropDisplay = null;
+    let cropZoom = 1;
+    let cropPanX = 0;
+    let cropPanY = 0;
+    let cropPointers = new Map();
+    let cropPinch = null;
+    let cropMultiTouch = false;
     let maskTool = 'restore';
     let maskStrokes = [];
     let activeMaskStroke = null;
@@ -669,15 +777,15 @@
         if (!packages.some(item => item.id === activePackageId)) activePackageId = 'default';
         localStorage.setItem('autoindx-active-package', activePackageId);
         const savedTemplate = await storeRequest(SETTINGS_STORE_NAME, 'readonly', 'get', 'template');
-        if (savedTemplate) templateSettings = { ...templateSettings, ...savedTemplate };
-        templateBgColor.value = templateSettings.bgColor;
-        templateBgColorValue.textContent = templateSettings.bgColor.toUpperCase();
+        if (savedTemplate) {
+            delete savedTemplate.fontBlob;
+            delete savedTemplate.jeansAge;
+            templateSettings = { ...templateSettings, ...savedTemplate };
+        }
         templateTextColor.value = templateSettings.textColor;
         templateFontSize.value = templateSettings.fontSize;
         templateProductScale.value = Math.round((templateSettings.productScale || 1) * 100);
         templateMargin.value = templateSettings.margin;
-        templateJeansAge.checked = Boolean(templateSettings.jeansAge);
-        if (templateSettings.fontBlob) await loadTemplateFont(templateSettings.fontBlob);
         syncTemplateBackgroundControl();
         await renderCollectionWorkspace();
         syncTemplateLabels();
@@ -865,8 +973,15 @@
             moreButton.setAttribute('aria-label', `Más opciones para ${item.name}`);
             moreButton.setAttribute('aria-expanded', 'false');
             const menu = document.createElement('div'); menu.className = 'collection-more-menu oculto';
+            const exportZipButton = document.createElement('button'); exportZipButton.type = 'button'; exportZipButton.textContent = 'Exportar ZIP';
+            exportZipButton.disabled = products.length === 0;
+            exportZipButton.title = products.length ? 'Exportar las fotos y los datos de esta colección' : 'Añade prendas para exportar esta colección';
             const renameButton = document.createElement('button'); renameButton.type = 'button'; renameButton.textContent = 'Renombrar';
             const deleteButton = document.createElement('button'); deleteButton.type = 'button'; deleteButton.className = 'delete-collection-action'; deleteButton.textContent = 'Eliminar colección';
+            exportZipButton.addEventListener('click', async () => {
+                menu.classList.add('oculto'); moreButton.setAttribute('aria-expanded', 'false');
+                await exportCollectionZip(item.id);
+            });
             renameButton.addEventListener('click', () => {
                 menu.classList.add('oculto'); moreButton.setAttribute('aria-expanded', 'false');
                 openRenameCollection(item.id);
@@ -875,7 +990,7 @@
                 menu.classList.add('oculto'); moreButton.setAttribute('aria-expanded', 'false');
                 await deleteCollection(item.id);
             });
-            menu.append(renameButton, deleteButton);
+            menu.append(exportZipButton, renameButton, deleteButton);
             moreButton.addEventListener('click', event => {
                 event.stopPropagation();
                 const opening = menu.classList.contains('oculto');
@@ -892,10 +1007,17 @@
         const allProducts = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
         renderCollectionHome(allProducts);
     }
+    function setCameraToolButtonLabel(label) {
+        const button = document.getElementById('openCameraToolBtn');
+        button.querySelector('span').textContent = label;
+        button.setAttribute('aria-label', label);
+        button.title = label;
+    }
     function enterCollection(packageId, { prompt = true } = {}) {
         activePackageId = packageId;
         localStorage.setItem('autoindx-active-package', activePackageId);
         rememberView('collection');
+        collectionWorkspace.classList.remove('camera-active');
         const current = activePackage();
         collectionNameTitle.textContent = current ? current.name : 'Colección';
         homeView.classList.add('oculto');
@@ -904,7 +1026,7 @@
         captureWorkspace.classList.add('oculto');
         activePackageBadge.textContent = `📦 ${current ? current.name : 'Colección'}`;
         activePackageBadge.classList.remove('oculto');
-        document.getElementById('openCameraToolBtn').textContent = 'Tomar fotos';
+        setCameraToolButtonLabel('Tomar fotos');
         const returnToLibrary = () => showCollectionLibrary();
         pushAppNavigation('collection', returnToLibrary);
         renderCollectionWorkspace(); updateUI();
@@ -915,8 +1037,8 @@
         const pending = products.filter(item => (item.packageId || 'default') === packageId && !item.fondoEliminado && !item.demo);
         if (!pending.length || activePackageId !== packageId || collectionWorkspace.classList.contains('oculto')) return;
         const prepareNow = await askForConfirmation(
-            `Hay ${pending.length} foto(s) con fondo por quitar. ¿Quieres quitárselo ahora? Después podrás retocar los bordes.`,
-            { yesLabel: 'Sí, quitar fondo', noLabel: 'Ahora no', destructive: false }
+            `Hay ${pending.length} foto(s) pendientes de preparar. ¿Quieres prepararlas ahora? Después podrás retocar los bordes.`,
+            { yesLabel: 'Sí, preparar fotos', noLabel: 'Ahora no', destructive: false }
         );
         if (prepareNow && activePackageId === packageId && !collectionWorkspace.classList.contains('oculto')) {
             await preparePackageForExport();
@@ -931,6 +1053,7 @@
         createPackageModal.classList.add('oculto');
         homeView.classList.remove('oculto');
         collectionWorkspace.classList.add('oculto');
+        collectionWorkspace.classList.remove('camera-active');
         activePackageBadge.classList.add('oculto');
         rememberView('home');
         await renderCollectionWorkspace();
@@ -943,9 +1066,10 @@
         }
         collectionDashboard.classList.remove('oculto');
         captureWorkspace.classList.add('oculto');
+        collectionWorkspace.classList.remove('camera-active');
         document.querySelector('.collection-toolbar').classList.remove('oculto');
         document.querySelector('.app-header').classList.remove('oculto');
-        document.getElementById('openCameraToolBtn').textContent = 'Tomar fotos';
+        setCameraToolButtonLabel('Tomar fotos');
         rememberView('collection');
         renderCollectionWorkspace(); updateUI();
         return true;
@@ -953,9 +1077,10 @@
     function openCameraTool() {
         collectionDashboard.classList.add('oculto');
         captureWorkspace.classList.remove('oculto');
+        collectionWorkspace.classList.add('camera-active');
         document.querySelector('.collection-toolbar').classList.add('oculto');
         document.querySelector('.app-header').classList.add('oculto');
-        document.getElementById('openCameraToolBtn').textContent = 'Ver prendas';
+        setCameraToolButtonLabel('Ver prendas');
         captureTitle.textContent = 'Tomar una foto';
         pushAppNavigation('capture', () => showCollectionDashboard());
         showCameraMode();
@@ -981,12 +1106,10 @@
     async function persistTemplate() {
         templateSettings = {
             ...templateSettings,
-            bgColor: templateBgColor.value,
             textColor: templateTextColor.value,
             fontSize: Number(templateFontSize.value),
             productScale: Number(templateProductScale.value) / 100,
             margin: Number(templateMargin.value),
-            jeansAge: templateJeansAge.checked
         };
         await storeRequest(SETTINGS_STORE_NAME, 'readwrite', 'put', { ...templateSettings, id: 'template' });
     }
@@ -1030,6 +1153,36 @@
         await renderTemplatePreview();
     });
     document.getElementById('templateCloseBtn').addEventListener('click', () => navigateBack(() => templateModal.classList.add('oculto')));
+    const templateSettingsModal = document.getElementById('templateSettingsModal');
+    const templateSettingsTitle = document.getElementById('templateSettingsTitle');
+    const templateSettingSections = {
+        background: document.getElementById('templateBackgroundSettings'),
+        product: document.getElementById('templateProductSettings'),
+        text: document.getElementById('templateTextSettings')
+    };
+    function closeTemplateSettings() {
+        templateSettingsModal.classList.add('oculto');
+        Object.values(templateSettingSections).forEach(section => section.classList.add('oculto'));
+    }
+    document.querySelectorAll('[data-template-settings]').forEach(button => {
+        button.addEventListener('click', () => {
+            const setting = button.dataset.templateSettings;
+            const section = templateSettingSections[setting];
+            if (!section) return;
+            const titles = { background: 'Fondo', product: 'Prenda', text: 'Talla y precio' };
+            templateSettingsTitle.textContent = titles[setting];
+            Object.values(templateSettingSections).forEach(item => item.classList.add('oculto'));
+            section.classList.remove('oculto');
+            if (templateSettingsModal.classList.contains('oculto')) {
+                pushAppNavigation('template-settings', closeTemplateSettings);
+            }
+            templateSettingsModal.classList.remove('oculto');
+        });
+    });
+    document.getElementById('templateSettingsCloseBtn').addEventListener('click', () => navigateBack(closeTemplateSettings));
+    templateSettingsModal.addEventListener('click', event => {
+        if (event.target === templateSettingsModal) navigateBack(closeTemplateSettings);
+    });
     document.getElementById('cropCloseBtn').addEventListener('click', () => navigateBack(closeCropEditor));
     document.getElementById('cropFrontBtn').addEventListener('click', () => openCropEditor('frontal'));
     document.getElementById('cropBackBtn').addEventListener('click', () => openCropEditor('reverso'));
@@ -1052,7 +1205,7 @@
         try { await persistTemplate(); syncTemplateBackgroundControl(); await renderTemplatePreview(); }
         catch (error) { showToast(`❌ No se pudo usar la imagen: ${error.message}`); }
     });
-    for (const input of [templateBgColor, templateTextColor, templateFontSize, templateProductScale, templateMargin, templateJeansAge]) {
+    for (const input of [templateTextColor, templateFontSize, templateProductScale, templateMargin]) {
         input.addEventListener('input', () => { syncTemplateLabels(); renderTemplatePreview(); });
         input.addEventListener('change', async () => {
             try { await persistTemplate(); await renderTemplatePreview(); }
@@ -1060,14 +1213,6 @@
         });
     }
     document.getElementById('exportRenderedBtn').addEventListener('click', exportDesignedPackage);
-    document.getElementById('templateFontInput')?.addEventListener('change', async event => {
-        const file = event.target.files[0];
-        if (!file) return;
-        templateSettings.fontBlob = file;
-        try { await loadTemplateFont(file); await persistTemplate(); await renderTemplatePreview(); }
-        catch (error) { showToast(`❌ No se pudo cargar la fuente: ${error.message}`); }
-    });
-
     async function renderCollectionWorkspace() {
         if (!db) return;
         try {
@@ -1114,9 +1259,10 @@
         editorReturnToDashboard = captureWorkspace.classList.contains('oculto');
         collectionDashboard.classList.add('oculto');
         captureWorkspace.classList.remove('oculto');
+        collectionWorkspace.classList.add('camera-active');
         document.querySelector('.collection-toolbar').classList.add('oculto');
         document.querySelector('.app-header').classList.add('oculto');
-        document.getElementById('openCameraToolBtn').textContent = 'Ver prendas';
+        setCameraToolButtonLabel('Ver prendas');
         captureTitle.textContent = 'Editar prenda';
         const returnToDashboard = () => {
             if (editorReturnToDashboard) return showCollectionDashboard();
@@ -1154,7 +1300,9 @@
         }
     }
     async function preparePackageImages(items) {
-        preparingTitle.textContent = 'Mejorando tus fotos…';
+        preparingTitle.textContent = 'Procesando el fondo…';
+        preparingStatus.textContent = 'Quitando el fondo para preparar la exportación…';
+        preparingOverlay.setAttribute('aria-busy', 'true');
         preparingOverlay.classList.remove('oculto');
         await new Promise(resolve => setTimeout(resolve, 40));
         try {
@@ -1185,15 +1333,15 @@
             }
             return items;
         } finally {
+            preparingOverlay.setAttribute('aria-busy', 'false');
             preparingOverlay.classList.add('oculto');
-            preparingTitle.textContent = 'Mejorando tus fotos…';
+            preparingTitle.textContent = 'Procesando el fondo…';
         }
     }
     function syncTemplateLabels() {
         templateFontSizeValue.textContent = `${templateFontSize.value} px`;
         templateProductScaleValue.textContent = `${templateProductScale.value}%`;
         templateMarginValue.textContent = `${templateMargin.value}%`;
-        templateBgColorValue.textContent = templateBgColor.value.toUpperCase();
     }
     function syncTemplateBackgroundControl() {
         if (templateBackgroundUrl) URL.revokeObjectURL(templateBackgroundUrl);
@@ -1209,14 +1357,6 @@
             templateBackgroundThumb.src = templateBackgroundUrl;
             templateBackgroundThumb.style.display = 'block';
         }
-    }
-    async function loadTemplateFont(blob) {
-        if (loadedTemplateFont) document.fonts.delete(loadedTemplateFont);
-        const fontUrl = URL.createObjectURL(blob);
-        const fontFace = new FontFace('AutoIndxTemplate', `url(${fontUrl})`);
-        try { await fontFace.load(); }
-        finally { URL.revokeObjectURL(fontUrl); }
-        document.fonts.add(fontFace); loadedTemplateFont = fontFace;
     }
     function loadImageBlob(blob) {
         return new Promise((resolve, reject) => {
@@ -1240,16 +1380,14 @@
         return canvasToBlob(canvas, blob.type === 'image/png' ? 'image/png' : 'image/jpeg');
     }
     function sizeForTemplate(size) {
-        if (!templateSettings.jeansAge || !size || !size.includes(' MX/') || !size.includes(' US')) return size || '';
-        const number = size.split(' ')[0];
-        return /^\d+$/.test(number) ? `${number} Años` : size;
+        return size || '';
     }
     async function drawProductTemplate(canvas, product, resolution = 1920) {
         canvas.width = resolution; canvas.height = resolution;
         const context = canvas.getContext('2d');
         const scale = resolution / 1920;
         context.save(); context.scale(scale, scale);
-        context.fillStyle = templateBgColor.value; context.fillRect(0, 0, 1920, 1920);
+        context.fillStyle = templateSettings.bgColor || '#340000'; context.fillRect(0, 0, 1920, 1920);
         if (templateSettings.background) {
             const background = await loadImageBlob(templateSettings.background);
             context.drawImage(background, 0, 0, 1920, 1920);
@@ -1283,7 +1421,7 @@
             context.fillStyle = '#d5dde5'; context.font = '600 48px sans-serif'; context.textAlign = 'center';
             context.fillText('Añade o toma una foto para verla aquí', 960, 800);
         }
-        context.font = `${fontSize}px ${loadedTemplateFont ? 'AutoIndxTemplate' : 'Arial, sans-serif'}`;
+        context.font = `${fontSize}px Arial, sans-serif`;
         context.textAlign = 'left'; context.textBaseline = 'alphabetic';
         const textX = margin + 30 + (Number(templateSettings.textOffsetX) || 0);
         const priceY = 1920 - margin - fontSize - 100 + (Number(templateSettings.textOffsetY) || 0);
@@ -1406,6 +1544,9 @@
             cropImage = image; cropRect = { x: 0, y: 0, width: image.width, height: image.height };
             cropOriginalImage = original;
             maskStrokes = []; activeMaskStroke = null; cropStart = null;
+            cropZoom = 1; cropPanX = 0; cropPanY = 0;
+            cropPointers.clear(); cropPinch = null; cropMultiTouch = false;
+            document.getElementById('cropZoomIndicator').textContent = '100%';
             maskTool = backgroundRemovedForCurrentProduct ? 'restore' : 'erase';
             document.getElementById('maskRestoreToolBtn').disabled = !original;
             document.getElementById('maskBrushSize').value = '36';
@@ -1419,12 +1560,13 @@
         document.getElementById('maskCropToolBtn').setAttribute('aria-pressed', String(maskTool === 'crop'));
         document.getElementById('maskRestoreToolBtn').setAttribute('aria-pressed', String(maskTool === 'restore'));
         document.getElementById('maskEraseToolBtn').setAttribute('aria-pressed', String(maskTool === 'erase'));
+        document.getElementById('maskBrushControl').classList.toggle('oculto', maskTool === 'crop');
         maskUndoBtn.disabled = maskStrokes.length === 0;
         document.getElementById('maskEditorHint').textContent = maskTool === 'crop'
-            ? 'Arrastra para seleccionar el área que quieres conservar.'
+            ? 'Arrastra para elegir el área. Pellizca para acercar.'
             : maskTool === 'restore'
-                ? 'Pinta sobre la prenda para recuperar las partes que faltan.'
-                : 'Pinta sobre el fondo o los bordes para hacerlos transparentes.';
+                ? 'Pinta para recuperar partes. Pellizca para acercar.'
+                : 'Pinta para borrar el fondo. Pellizca para acercar.';
     }
     function drawMaskStroke(context, stroke) {
         if (!stroke.points.length) return;
@@ -1451,8 +1593,38 @@
     }
     function renderMaskBase(context) {
         context.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+        applyCropViewTransform(context);
         context.drawImage(cropImage, 0, 0, cropCanvas.width, cropCanvas.height);
         maskStrokes.forEach(stroke => drawMaskStroke(context, stroke));
+    }
+    function applyCropViewTransform(context) {
+        const centerX = cropCanvas.width / 2;
+        const centerY = cropCanvas.height / 2;
+        context.translate(centerX + cropPanX, centerY + cropPanY);
+        context.scale(cropZoom, cropZoom);
+        context.translate(-centerX, -centerY);
+    }
+    function cropCanvasViewPoint(clientX, clientY) {
+        const bounds = cropCanvas.getBoundingClientRect();
+        return {
+            x: (clientX - bounds.left) * cropCanvas.width / Math.max(bounds.width, 1),
+            y: (clientY - bounds.top) * cropCanvas.height / Math.max(bounds.height, 1)
+        };
+    }
+    function cropCanvasImagePoint(clientX, clientY) {
+        const viewPoint = cropCanvasViewPoint(clientX, clientY);
+        return {
+            x: cropCanvas.width / 2 + (viewPoint.x - cropCanvas.width / 2 - cropPanX) / cropZoom,
+            y: cropCanvas.height / 2 + (viewPoint.y - cropCanvas.height / 2 - cropPanY) / cropZoom
+        };
+    }
+    function drawActiveMaskStroke(stroke) {
+        const context = cropCanvas.getContext('2d');
+        if (!context) return;
+        context.save();
+        applyCropViewTransform(context);
+        drawMaskStroke(context, stroke);
+        context.restore();
     }
     function drawCropEditor() {
         if (!cropImage) return;
@@ -1462,6 +1634,7 @@
         renderMaskBase(context);
         if (maskTool === 'crop' && cropRect) {
             context.save();
+            applyCropViewTransform(context);
             context.fillStyle = 'rgba(3,8,12,.48)';
             context.fillRect(0, 0, cropCanvas.width, cropRect.y);
             context.fillRect(0, cropRect.y, cropRect.x, cropRect.height);
@@ -1471,6 +1644,7 @@
             context.setLineDash([12, 8]); context.strokeRect(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
             context.restore();
         }
+        document.getElementById('cropZoomIndicator').textContent = `${Math.round(cropZoom * 100)}%`;
     }
     function setMaskTool(tool) {
         maskTool = tool;
@@ -1489,13 +1663,54 @@
     document.getElementById('maskResetBtn').addEventListener('click', () => {
         maskStrokes = [];
         cropRect = { x: 0, y: 0, width: cropImage.width, height: cropImage.height };
+        cropZoom = 1; cropPanX = 0; cropPanY = 0;
         syncMaskTools(); drawCropEditor();
     });
+    function midpointOfCropPointers() {
+        const [first, second] = Array.from(cropPointers.values());
+        return { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+    }
+    function distanceBetweenCropPointers() {
+        const [first, second] = Array.from(cropPointers.values());
+        return Math.hypot(second.x - first.x, second.y - first.y);
+    }
+    function beginCropPinch() {
+        cropMultiTouch = true;
+        if (activeMaskStroke && maskStrokes[maskStrokes.length - 1] === activeMaskStroke) maskStrokes.pop();
+        activeMaskStroke = null;
+        cropStart = null;
+        syncMaskTools();
+        const midpoint = midpointOfCropPointers();
+        cropPinch = {
+            startDistance: Math.max(distanceBetweenCropPointers(), 1),
+            startZoom: cropZoom,
+            anchor: cropCanvasImagePoint(midpoint.x, midpoint.y)
+        };
+        drawCropEditor();
+    }
+    function updateCropPinch() {
+        if (!cropPinch || cropPointers.size < 2) return;
+        const pointerMidpoint = midpointOfCropPointers();
+        const midpoint = cropCanvasViewPoint(pointerMidpoint.x, pointerMidpoint.y);
+        const centerX = cropCanvas.width / 2;
+        const centerY = cropCanvas.height / 2;
+        cropZoom = Math.min(5, Math.max(1, cropPinch.startZoom * distanceBetweenCropPointers() / cropPinch.startDistance));
+        cropPanX = midpoint.x - centerX - (cropPinch.anchor.x - centerX) * cropZoom;
+        cropPanY = midpoint.y - centerY - (cropPinch.anchor.y - centerY) * cropZoom;
+        cropPanX = Math.max(-centerX * (cropZoom - 1), Math.min(centerX * (cropZoom - 1), cropPanX));
+        cropPanY = Math.max(-centerY * (cropZoom - 1), Math.min(centerY * (cropZoom - 1), cropPanY));
+        drawCropEditor();
+    }
     cropCanvas.addEventListener('pointerdown', event => {
         if (!cropImage) return;
+        event.preventDefault();
         cropCanvas.setPointerCapture(event.pointerId);
-        const bounds = cropCanvas.getBoundingClientRect();
-        const point = { x: (event.clientX - bounds.left) * cropCanvas.width / bounds.width, y: (event.clientY - bounds.top) * cropCanvas.height / bounds.height };
+        cropPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (cropPointers.size >= 2) {
+            beginCropPinch();
+            return;
+        }
+        const point = cropCanvasImagePoint(event.clientX, event.clientY);
         if (maskTool === 'crop') {
             cropStart = point;
             cropRect = { x: point.x, y: point.y, width: 0, height: 0 };
@@ -1504,33 +1719,44 @@
         }
         activeMaskStroke = { tool: maskTool, size: Number(maskBrushSize.value), points: [point] };
         maskStrokes.push(activeMaskStroke);
-        drawMaskStroke(cropCanvas.getContext('2d'), activeMaskStroke);
+        drawActiveMaskStroke(activeMaskStroke);
         syncMaskTools();
     });
     cropCanvas.addEventListener('pointermove', event => {
         if (!cropImage) return;
-        const bounds = cropCanvas.getBoundingClientRect();
-        const x = Math.max(0, Math.min(cropCanvas.width, (event.clientX - bounds.left) * cropCanvas.width / bounds.width));
-        const y = Math.max(0, Math.min(cropCanvas.height, (event.clientY - bounds.top) * cropCanvas.height / bounds.height));
+        if (cropPointers.has(event.pointerId)) cropPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (cropPinch && cropPointers.size >= 2) {
+            event.preventDefault();
+            updateCropPinch();
+            return;
+        }
+        if (cropMultiTouch) return;
+        const point = cropCanvasImagePoint(event.clientX, event.clientY);
+        const x = Math.max(0, Math.min(cropCanvas.width, point.x));
+        const y = Math.max(0, Math.min(cropCanvas.height, point.y));
         if (cropStart && maskTool === 'crop') {
             cropRect = { x: Math.min(x, cropStart.x), y: Math.min(y, cropStart.y), width: Math.abs(x - cropStart.x), height: Math.abs(y - cropStart.y) };
             drawCropEditor();
         } else if (activeMaskStroke && maskTool !== 'crop') {
             const previous = activeMaskStroke.points[activeMaskStroke.points.length - 1];
-            const point = { x, y };
-            activeMaskStroke.points.push(point);
-            drawMaskStroke(cropCanvas.getContext('2d'), { ...activeMaskStroke, points: [previous, point] });
+            const nextPoint = { x, y };
+            activeMaskStroke.points.push(nextPoint);
+            drawActiveMaskStroke({ ...activeMaskStroke, points: [previous, nextPoint] });
         }
     });
-    const finishMaskPointer = () => {
-        cropStart = null;
-        activeMaskStroke = null;
+    const finishMaskPointer = event => {
+        cropPointers.delete(event.pointerId);
+        if (cropPointers.size < 2) cropPinch = null;
+        if (cropPointers.size === 0) cropMultiTouch = false;
+        if (cropMultiTouch) return;
+        cropStart = null; activeMaskStroke = null;
     };
     cropCanvas.addEventListener('pointerup', finishMaskPointer);
     cropCanvas.addEventListener('pointercancel', finishMaskPointer);
     function closeCropEditor() {
         cropModal.classList.add('oculto');
         cropImage = null; cropOriginalImage = null; cropStart = null; activeMaskStroke = null; maskStrokes = [];
+        cropPointers.clear(); cropPinch = null; cropMultiTouch = false;
         return true;
     }
     async function applyManualCrop() {
@@ -1725,6 +1951,13 @@
         const range = cameraCapabilities.exposureCompensation;
         return range && Number.isFinite(range.min) && Number.isFinite(range.max) ? range : null;
     }
+    function clampCameraSetting(value, range) {
+        if (!Number.isFinite(value) || !range || !Number.isFinite(range.min) || !Number.isFinite(range.max)) return null;
+        const clamped = Math.min(range.max, Math.max(range.min, value));
+        if (!Number.isFinite(range.step) || range.step <= 0) return clamped;
+        const stepped = range.min + Math.round((clamped - range.min) / range.step) * range.step;
+        return Number(Math.min(range.max, Math.max(range.min, stepped)).toPrecision(12));
+    }
     async function applyExposureCompensation(value) {
         if (!cameraTrack) return;
         try {
@@ -1750,13 +1983,14 @@
         const focusMode = focusModes.includes('manual') ? 'manual' : focusModes.includes('single-shot') ? 'single-shot' : null;
         if (focusMode) {
             constraints.focusMode = focusMode;
-            if (focusMode === 'manual' && Number.isFinite(settings.focusDistance)) constraints.focusDistance = settings.focusDistance;
+            const focusDistance = clampCameraSetting(settings.focusDistance, cameraCapabilities.focusDistance);
+            if (focusMode === 'manual' && focusDistance !== null) constraints.focusDistance = focusDistance;
         }
         const exposureTimeRange = cameraCapabilities.exposureTime;
-        if (exposureModes.includes('manual') && exposureModes.includes('continuous')
-            && exposureTimeRange && Number.isFinite(settings.exposureTime)) {
+        const exposureTime = clampCameraSetting(settings.exposureTime, exposureTimeRange);
+        if (exposureModes.includes('manual') && exposureModes.includes('continuous') && exposureTime !== null) {
             constraints.exposureMode = 'manual';
-            constraints.exposureTime = settings.exposureTime;
+            constraints.exposureTime = exposureTime;
         }
         if (!Object.keys(constraints).length) {
             showFocusHint('El bloqueo de enfoque/exposición no está disponible en esta cámara.');
@@ -1857,12 +2091,15 @@
     function openPicker(type) {
         const select = type === 'size' ? sizeSelect : priceSelect;
         activePicker = select;
+        pickerGrid.dataset.type = type;
         pickerTitle.textContent = type === 'size' ? 'Seleccionar talla' : 'Seleccionar precio';
         pickerGrid.innerHTML = '';
         Array.from(select.options).filter(option => option.value).forEach(option => {
             const choice = document.createElement('button');
             choice.type = 'button';
             choice.textContent = option.textContent;
+            const sizeGroup = option.parentElement?.dataset.sizeGroup;
+            if (sizeGroup) choice.dataset.sizeGroup = sizeGroup;
             choice.classList.toggle('selected', option.value === select.value);
             choice.setAttribute('aria-pressed', String(option.value === select.value));
             choice.addEventListener('click', () => {
@@ -1942,13 +2179,14 @@
             if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src); photoPreviewReverso.src = URL.createObjectURL(fotoReversoBlob);
             previewContainer.classList.add('dual-view'); photoPreviewReverso.classList.remove('oculto');
             singlePhotoActions.classList.add('oculto'); dualPhotoActions.classList.remove('oculto'); dualRetakeControls.classList.remove('oculto');
-            document.getElementById('cropBackBtn').classList.remove('oculto');
         } else {
             previewContainer.classList.remove('dual-view'); photoPreviewReverso.classList.add('oculto');
             if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
             singlePhotoActions.classList.remove('oculto'); dualPhotoActions.classList.add('oculto'); dualRetakeControls.classList.add('oculto');
-            document.getElementById('cropBackBtn').classList.add('oculto');
         }
+        const cropBackBtn = document.getElementById('cropBackBtn');
+        cropBackBtn.disabled = !fotoReversoBlob;
+        cropBackBtn.title = fotoReversoBlob ? 'Retocar recorte reverso' : 'Añade una foto de reverso para retocar su recorte';
         updateUI();
     }
 
@@ -2062,32 +2300,44 @@
             showToast(`❌ No se pudo vaciar la colección: ${error.message}`);
         }
     };
-    saveZipBtn.onclick = () => {
-        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onsuccess = (e) => {
-            const photos = e.target.result.filter(item => (item.packageId || 'default') === activePackageId);
-            if (photos.length === 0) { showToast("No hay fotos para exportar."); return; }
+    async function exportCollectionZip(packageId) {
+        try {
+            if (typeof JSZip !== 'function') throw new Error('No está disponible la herramienta para crear archivos ZIP.');
+            const packageInfo = packages.find(item => item.id === packageId);
+            if (!packageInfo) throw new Error('No se encontró la colección para exportar.');
+            const allProducts = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
+            const photos = allProducts
+                .filter(item => (item.packageId || 'default') === packageId)
+                .sort((left, right) => left.id - right.id);
+            if (photos.length === 0) { showToast('No hay fotos para exportar.'); return; }
             const zip = new JSZip();
             photos.forEach((item, index) => {
                 const photoIndex = index + 1;
                 if (item.foto) zip.file(`foto_${photoIndex}_frontal.${item.foto.type === 'image/png' ? 'png' : 'jpg'}`, item.foto);
                 if (item.fotoReverso) zip.file(`foto_${photoIndex}_reverso.${item.fotoReverso.type === 'image/png' ? 'png' : 'jpg'}`, item.fotoReverso);
-                zip.file(`foto_${photoIndex}_datos.txt`, `Talla: ${item.talla}\nPrecio: ${item.precio}`);
+                zip.file(`foto_${photoIndex}_datos.txt`, `Talla: ${item.talla || ''}\nPrecio: ${item.precio || ''}`);
             });
-            zip.generateAsync({ type: "blob" }).then(content => {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(content); a.download = `${activePackage().name.replace(/[^\p{L}\p{N}_-]+/gu, '_')}.zip`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(a.href), 1000); showToast("Descarga ZIP iniciada.");
-            }).catch(() => showToast("❌ Error al generar el archivo ZIP."));
-        };
-    };
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(content);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${packageInfo.name.replace(/[^\p{L}\p{N}_-]+/gu, '_')}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast('Descarga ZIP iniciada.');
+        } catch (error) {
+            showToast(`❌ No se pudo exportar la colección: ${error.message}`);
+        }
+    }
+    saveZipBtn.addEventListener('click', () => exportCollectionZip(activePackageId));
 
     function updateCounters() {
         if (!db) return;
         db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onsuccess = e => {
             const count = e.target.result.filter(item => (item.packageId || 'default') === activePackageId).length;
             actionsDiv.classList.toggle('oculto', count === 0 || collectionDashboard.classList.contains('oculto'));
-            saveZipBtn.textContent = `Descargar fotos (${count})`;
             if (!collectionWorkspace.classList.contains('oculto')) countBadge.textContent = `${count} ${count === 1 ? 'prenda' : 'prendas'}`;
         };
     }
