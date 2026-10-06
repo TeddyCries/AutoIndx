@@ -205,7 +205,7 @@ video { touch-action: none; user-select: none; -webkit-user-select: none; -webki
 #cropZoomIndicator { position: absolute; top: 8px; right: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: rgba(5,10,14,.78); color: #f5f7fa; font-size: 11px; pointer-events: none; }
 #cropPanel .template-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; }
 #cropPanel .template-actions button { display: grid; min-width: 0; min-height: 44px; place-items: center; padding: 7px 5px; }
-#cropPanel #applyCropBtn { border-color: var(--accent); background: var(--accent); color: #082019; }
+#cropPanel #applyCropBtn { border-color: red; background: red; color: #fff; }
 @media (min-width: 700px) { #cropModal { padding: 16px; } #cropPanel { height: min(100%, 900px); border-radius: 24px; } }
 .template-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(270px, .75fr); gap: 16px; min-height: 0; margin-top: 16px; }
 .template-canvas-area { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 8px; }
