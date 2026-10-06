@@ -1,12 +1,13 @@
-const CACHE_NAME = 'autoindx-shell-v2';
+const CACHE_NAME = 'autoindx-shell-v5';
 const APP_SHELL = [
     './',
     './index.html',
     './manifest.webmanifest',
     './favicon.ico',
-    './icons/autoindx.svg',
+    './logo.svg',
     './icons/autoindx-192.png',
     './icons/autoindx-512.png',
+    './icons/autoindx-maskable-512.png',
     './icons/apple-touch-icon.png'
 ];
 
