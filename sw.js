@@ -1,4 +1,4 @@
-const CACHE_NAME = 'autoindx-shell-v24';
+const CACHE_NAME = 'autoindx-shell-v25';
 const APP_SHELL = [
     './',
     './index.html',
@@ -6,7 +6,7 @@ const APP_SHELL = [
     './assets/js/app.js',
     './assets/js/alpha-mask-editor.js',
     './assets/js/template-editor.js',
-    './assets/js/rmbg-background-removal.js',
+    './assets/js/modnet-background-removal.js',
     './manifest.webmanifest',
     './favicon.ico',
     './logo.svg',
