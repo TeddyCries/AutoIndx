@@ -217,10 +217,15 @@ export function createAlphaMaskEditor({
         const centerX = cropCanvas.width / 2;
         const centerY = cropCanvas.height / 2;
         cropZoom = Math.min(5, Math.max(1, cropPinch.startZoom * distanceBetweenCropPointers() / cropPinch.startDistance));
-        cropPanX = midpoint.x - centerX - (cropPinch.anchor.x - centerX) * cropZoom;
-        cropPanY = midpoint.y - centerY - (cropPinch.anchor.y - centerY) * cropZoom;
-        cropPanX = Math.max(-centerX * (cropZoom - 1), Math.min(centerX * (cropZoom - 1), cropPanX));
-        cropPanY = Math.max(-centerY * (cropZoom - 1), Math.min(centerY * (cropZoom - 1), cropPanY));
+        if (cropZoom === 1) {
+            cropPanX = 0;
+            cropPanY = 0;
+        } else {
+            cropPanX = midpoint.x - centerX - (cropPinch.anchor.x - centerX) * cropZoom;
+            cropPanY = midpoint.y - centerY - (cropPinch.anchor.y - centerY) * cropZoom;
+            cropPanX = Math.max(-centerX * (cropZoom - 1), Math.min(centerX * (cropZoom - 1), cropPanX));
+            cropPanY = Math.max(-centerY * (cropZoom - 1), Math.min(centerY * (cropZoom - 1), cropPanY));
+        }
         drawCropEditor();
     }
 
