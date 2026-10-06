@@ -20,8 +20,9 @@ export function createAlphaMaskEditor({
     let cropImage = null;
     let cropOriginalImage = null;
     let cropZoom = 1;
-    let cropPanX = 0; // in image pixels
+    let cropPanX = 0;
     let cropPanY = 0;
+    let cropRotation = 0;
     let cropPointers = new Map();
     let cropPinch = null;
     let cropMultiTouch = false;
@@ -53,20 +54,20 @@ export function createAlphaMaskEditor({
         };
     }
 
-    // client coords → image pixel coords (accounting for zoom/pan)
     function clientToImage(clientX, clientY) {
         const r = getContainRect();
-        // Position within the rendered canvas in image pixels (before zoom/pan)
         const rawX = (clientX - r.left) / r.scale;
         const rawY = (clientY - r.top) / r.scale;
-        // Invert the zoom/pan transform:
-        // rendered = (image - center) * zoom + center + pan
-        // image = (rendered - center - pan) / zoom + center
         const cx = cropCanvas.width / 2;
         const cy = cropCanvas.height / 2;
+        // Invert: translate(-cx,-cy) -> scale(zoom) -> rotate -> translate(cx+panX, cy+panY)
+        const dx = (rawX - cx - cropPanX) / cropZoom;
+        const dy = (rawY - cy - cropPanY) / cropZoom;
+        const cos = Math.cos(-cropRotation);
+        const sin = Math.sin(-cropRotation);
         return {
-            x: (rawX - cx - cropPanX) / cropZoom + cx,
-            y: (rawY - cy - cropPanY) / cropZoom + cy
+            x: cx + dx * cos - dy * sin,
+            y: cy + dx * sin + dy * cos
         };
     }
 
@@ -75,11 +76,11 @@ export function createAlphaMaskEditor({
     function applyViewTransform(ctx) {
         const cx = cropCanvas.width / 2;
         const cy = cropCanvas.height / 2;
-        ctx.setTransform(
-            cropZoom, 0, 0, cropZoom,
-            cx + cropPanX - cx * cropZoom,
-            cy + cropPanY - cy * cropZoom
-        );
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.translate(cx + cropPanX, cy + cropPanY);
+        ctx.rotate(cropRotation);
+        ctx.scale(cropZoom, cropZoom);
+        ctx.translate(-cx, -cy);
     }
 
     function drawBrushPath(ctx, stroke, offsetX = 0, offsetY = 0) {
@@ -146,7 +147,8 @@ export function createAlphaMaskEditor({
         ctx.drawImage(cropImage, 0, 0, cropCanvas.width, cropCanvas.height);
         maskStrokes.forEach(stroke => drawMaskStroke(ctx, stroke));
         ctx.restore();
-        document.getElementById('cropZoomIndicator').textContent = `${Math.round(cropZoom * 100)}%`;
+        document.getElementById('cropZoomIndicator').textContent =
+            `${Math.round(cropZoom * 100)}%${cropRotation !== 0 ? ' ' + Math.round(cropRotation * 180 / Math.PI) + '°' : ''}`;
     }
 
     // ── Pinch ─────────────────────────────────────────────────────────────────
@@ -161,6 +163,11 @@ export function createAlphaMaskEditor({
         return Math.hypot(b.x - a.x, b.y - a.y);
     }
 
+    function angleOfPointers() {
+        const [a, b] = Array.from(cropPointers.values());
+        return Math.atan2(b.y - a.y, b.x - a.x);
+    }
+
     function beginCropPinch() {
         cropMultiTouch = true;
         if (activeMaskStroke && maskStrokes[maskStrokes.length - 1] === activeMaskStroke) maskStrokes.pop();
@@ -170,10 +177,11 @@ export function createAlphaMaskEditor({
         const mid = midpointOfPointers();
         cropPinch = {
             startDistance: Math.max(distanceBetweenPointers(), 1),
+            startAngle: angleOfPointers(),
             startZoom: cropZoom,
+            startRotation: cropRotation,
             startPanX: cropPanX,
             startPanY: cropPanY,
-            // image-pixel coords of the pinch midpoint at gesture start
             anchorImage: clientToImage(mid.x, mid.y)
         };
         drawCropEditor();
@@ -182,30 +190,24 @@ export function createAlphaMaskEditor({
     function updateCropPinch() {
         if (!cropPinch || cropPointers.size < 2) return;
         const mid = midpointOfPointers();
-        const newZoom = Math.min(5, Math.max(1,
-            cropPinch.startZoom * distanceBetweenPointers() / cropPinch.startDistance));
+        cropZoom = Math.min(5, Math.max(1, cropPinch.startZoom * distanceBetweenPointers() / cropPinch.startDistance));
+        cropRotation = cropPinch.startRotation + (angleOfPointers() - cropPinch.startAngle);
 
-        if (newZoom <= 1) {
-            cropZoom = 1;
-            cropPanX = 0;
-            cropPanY = 0;
-        } else {
-            cropZoom = newZoom;
-            // We want: clientToImage(mid) == cropPinch.anchorImage
-            // clientToImage(mid) = (rawMid - center - pan) / zoom + center
-            // => pan = rawMid - center - (anchor - center) * zoom
-            const r = getContainRect();
-            const rawMidX = (mid.x - r.left) / r.scale;
-            const rawMidY = (mid.y - r.top) / r.scale;
-            const cx = cropCanvas.width / 2;
-            const cy = cropCanvas.height / 2;
-            cropPanX = rawMidX - cx - (cropPinch.anchorImage.x - cx) * cropZoom;
-            cropPanY = rawMidY - cy - (cropPinch.anchorImage.y - cy) * cropZoom;
-            const maxPX = cx * (cropZoom - 1);
-            const maxPY = cy * (cropZoom - 1);
-            cropPanX = Math.max(-maxPX, Math.min(maxPX, cropPanX));
-            cropPanY = Math.max(-maxPY, Math.min(maxPY, cropPanY));
-        }
+        if (cropZoom <= 1) { cropZoom = 1; cropPanX = 0; cropPanY = 0; cropRotation = 0; drawCropEditor(); return; }
+
+        // Keep anchorImage fixed under mid after applying new zoom+rotation:
+        // rawMid = rotate(rotation) * scale(zoom) * (anchor - center) + center + pan
+        const r = getContainRect();
+        const rawMidX = (mid.x - r.left) / r.scale;
+        const rawMidY = (mid.y - r.top) / r.scale;
+        const cx = cropCanvas.width / 2;
+        const cy = cropCanvas.height / 2;
+        const adx = cropPinch.anchorImage.x - cx;
+        const ady = cropPinch.anchorImage.y - cy;
+        const cos = Math.cos(cropRotation);
+        const sin = Math.sin(cropRotation);
+        cropPanX = rawMidX - cx - cropZoom * (adx * cos - ady * sin);
+        cropPanY = rawMidY - cy - cropZoom * (adx * sin + ady * cos);
         drawCropEditor();
     }
 
@@ -282,6 +284,7 @@ export function createAlphaMaskEditor({
             cropZoom = 1;
             cropPanX = 0;
             cropPanY = 0;
+            cropRotation = 0;
             cropPointers.clear();
             cropPinch = null;
             cropMultiTouch = false;
@@ -386,6 +389,7 @@ export function createAlphaMaskEditor({
         cropZoom = 1;
         cropPanX = 0;
         cropPanY = 0;
+        cropRotation = 0;
         syncMaskTools();
         drawCropEditor();
     });
