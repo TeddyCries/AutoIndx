@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b1016">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="AutoIndx">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./favicon.ico" sizes="any">
+    <link rel="icon" href="./icons/autoindx.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
     <title>AutoIndx · Mi armario</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b1016; color: #f5f7fa; --surface: #141c25; --surface-raised: #202b37; --muted: #9ba8b7; --accent: #43d6ad; --line: rgba(255,255,255,.1); }
         * { box-sizing: border-box; }
@@ -69,7 +77,7 @@
         .dashboard-heading h2 { margin: 0; font-size: 20px; }
         .dashboard-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
         #collectionDashboard { display: flex; min-height: 0; flex-direction: column; overflow: hidden; }
-        #productGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 11px; overflow-y: auto; overscroll-behavior: contain; }
+        #productGrid { display: grid; flex: 1 1 auto; min-height: 0; align-content: start; align-items: start; grid-auto-rows: max-content; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 11px; overflow-y: auto; overscroll-behavior: contain; }
         .collection-product-empty { grid-column: 1 / -1; padding: 26px; border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); text-align: center; }
         .collection-product-empty button { margin-top: 10px; border-color: var(--accent); color: var(--accent); }
         #captureWorkspace { display: flex; width: 100%; min-height: 0; flex: 1 1 auto; flex-direction: column; gap: 8px; overflow: hidden; }
@@ -169,8 +177,8 @@
         .template-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
         .manager-section-title { margin: 24px 0 10px; font-size: 14px; }
         #productGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
-        .managed-product { overflow: hidden; padding: 0; text-align: left; }
-        .managed-product img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #080c10; }
+        .managed-product { display: flex; width: 100%; min-width: 0; height: max-content; min-height: 0; flex-direction: column; align-self: start; overflow: hidden; padding: 0; text-align: left; }
+        .managed-product img { display: block; width: 100%; height: auto; flex: 0 0 auto; aspect-ratio: 1 / 1; object-fit: cover; background: #080c10; }
         .managed-product-copy { display: grid; gap: 4px; overflow: hidden; padding: 9px; }
         .managed-product-copy strong, .managed-product-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .managed-product-copy strong { font-size: 12px; }
@@ -827,7 +835,7 @@
             rememberView('home');
             return;
         }
-        enterCollection(activePackageId, { prompt: false });
+        enterCollection(activePackageId);
         if (lastScreen !== 'editor') return;
         if (!Number.isSafeInteger(savedPhotoId) || savedPhotoId < 1) {
             rememberView('collection');
@@ -1057,7 +1065,7 @@
         button.setAttribute('aria-label', label);
         button.title = label;
     }
-    function enterCollection(packageId, { prompt = true } = {}) {
+    function enterCollection(packageId) {
         activePackageId = packageId;
         localStorage.setItem('autoindx-active-package', activePackageId);
         rememberView('collection');
@@ -1074,19 +1082,6 @@
         const returnToLibrary = () => showCollectionLibrary();
         pushAppNavigation('collection', returnToLibrary);
         renderCollectionWorkspace(); updateUI();
-        if (prompt) promptToPrepareCollection(packageId).catch(error => showToast(`❌ No se pudo revisar la colección: ${error.message}`));
-    }
-    async function promptToPrepareCollection(packageId) {
-        const products = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
-        const pending = products.filter(item => (item.packageId || 'default') === packageId && !item.fondoEliminado && !item.demo);
-        if (!pending.length || activePackageId !== packageId || collectionWorkspace.classList.contains('oculto')) return;
-        const prepareNow = await askForConfirmation(
-            `Hay ${pending.length} foto(s) pendientes de preparar. ¿Quieres prepararlas ahora? Después podrás retocar los bordes.`,
-            { yesLabel: 'Sí, preparar fotos', noLabel: 'Ahora no', destructive: false }
-        );
-        if (prepareNow && activePackageId === packageId && !collectionWorkspace.classList.contains('oculto')) {
-            await preparePackageForExport();
-        }
     }
     async function showCollectionLibrary() {
         if (!captureWorkspace.classList.contains('oculto')) {
@@ -1197,7 +1192,7 @@
             { yesLabel: 'Empezar a tomar fotos', noLabel: 'Ahora no', destructive: false }
         );
         if (startTakingPhotos) {
-            enterCollection(createdPackage.id, { prompt: false });
+            enterCollection(createdPackage.id);
             openCameraTool();
         }
     });
@@ -2474,6 +2469,12 @@
             });
         };
         db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onerror = () => showToast("❌ Error al cargar las miniaturas.");
+    }
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        const serviceWorkerUrl = new URL('./sw.js', document.baseURI);
+        const serviceWorkerScope = new URL('./', document.baseURI).pathname;
+        navigator.serviceWorker.register(serviceWorkerUrl, { scope: serviceWorkerScope })
+            .catch(error => console.error('No se pudo habilitar el modo instalable sin conexión:', error));
     }
 </script>
 </body>

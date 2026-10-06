@@ -1,0 +1,33 @@
+{
+  "id": "./",
+  "name": "AutoIndx",
+  "short_name": "AutoIndx",
+  "description": "Gestiona tu inventario de prendas y prepara tus productos para la venta.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0b1016",
+  "theme_color": "#0b1016",
+  "icons": [
+    {
+      "src": "./icons/autoindx-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/autoindx-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/autoindx.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
