@@ -665,9 +665,7 @@ async function renderCollectionWorkspace() {
             productGrid.appendChild(card);
         });
         if (currentProducts.length === 0) {
-            const empty = document.createElement('div'); empty.className = 'collection-product-empty';
-            empty.textContent = 'Todavía no hay prendas aquí. Toca «Tomar fotos» para añadir la primera.';
-            productGrid.appendChild(empty);
+
         }
     } catch (error) { showToast(`❌ No se pudieron cargar los productos de la colección: ${error.message}`); }
 }
