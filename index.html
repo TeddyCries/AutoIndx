@@ -656,6 +656,8 @@
         managerModal.classList.add('oculto');
         collectionDashboard.classList.remove('oculto');
         captureWorkspace.classList.add('oculto');
+        document.querySelector('.collection-toolbar').classList.remove('oculto');
+        document.querySelector('.app-header').classList.remove('oculto');
         document.getElementById('openCameraToolBtn').textContent = 'Abrir cámara';
         renderPackageManager(); updateUI();
     }
@@ -663,6 +665,8 @@
         managerModal.classList.add('oculto');
         collectionDashboard.classList.add('oculto');
         captureWorkspace.classList.remove('oculto');
+        document.querySelector('.collection-toolbar').classList.add('oculto');
+        document.querySelector('.app-header').classList.add('oculto');
         document.getElementById('openCameraToolBtn').textContent = 'Ver productos';
         showCameraMode();
     }
@@ -863,6 +867,8 @@
         editorReturnToDashboard = captureWorkspace.classList.contains('oculto');
         collectionDashboard.classList.add('oculto');
         captureWorkspace.classList.remove('oculto');
+        document.querySelector('.collection-toolbar').classList.add('oculto');
+        document.querySelector('.app-header').classList.add('oculto');
         document.getElementById('openCameraToolBtn').textContent = 'Ver productos';
         fotoBlob = item.foto; fotoReversoBlob = item.fotoReverso || null;
         fotoOriginalBlob = item.fotoOriginal || null; fotoReversoOriginalBlob = item.fotoReversoOriginal || null;
@@ -1461,6 +1467,8 @@
             exitCameraWorkspace();
             captureWorkspace.classList.add('oculto');
             collectionDashboard.classList.remove('oculto');
+            document.querySelector('.collection-toolbar').classList.remove('oculto');
+            document.querySelector('.app-header').classList.remove('oculto');
             renderPackageManager(); updateUI();
         } else {
             showCameraMode();
@@ -1490,6 +1498,8 @@
             const returnToDashboard = editorReturnToDashboard;
             if (returnToDashboard) {
                 exitCameraWorkspace(); captureWorkspace.classList.add('oculto'); collectionDashboard.classList.remove('oculto');
+                document.querySelector('.collection-toolbar').classList.remove('oculto');
+                document.querySelector('.app-header').classList.remove('oculto');
             } else {
                 showCameraMode();
             }
