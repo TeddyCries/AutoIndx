@@ -221,13 +221,7 @@ export function createAlphaMaskEditor({
         const pt = clientToImage(event.clientX, event.clientY);
         activeMaskStroke = { tool: maskTool, size: Number(maskBrushSize.value), points: [pt] };
         maskStrokes.push(activeMaskStroke);
-        const ctx = cropCanvas.getContext('2d');
-        if (ctx) {
-            ctx.save();
-            applyViewTransform(ctx);
-            drawMaskStroke(ctx, activeMaskStroke);
-            ctx.restore();
-        }
+        drawCropEditor();
         syncMaskTools();
     }
 
@@ -242,7 +236,6 @@ export function createAlphaMaskEditor({
         if (cropMultiTouch || event.pointerId !== cropDrawingPointerId) return;
         const samples = (typeof event.getCoalescedEvents === 'function' && event.getCoalescedEvents().length)
             ? event.getCoalescedEvents() : [event];
-        const ctx = cropCanvas.getContext('2d');
         samples.forEach(sample => {
             const pt = clientToImage(sample.clientX, sample.clientY);
             const x = Math.max(0, Math.min(cropCanvas.width, pt.x));
@@ -251,12 +244,7 @@ export function createAlphaMaskEditor({
             const prev = activeMaskStroke.points[activeMaskStroke.points.length - 1];
             if (Math.hypot(x - prev.x, y - prev.y) < 0.5) return;
             activeMaskStroke.points.push({ x, y });
-            if (ctx) {
-                ctx.save();
-                applyViewTransform(ctx);
-                drawMaskStroke(ctx, { ...activeMaskStroke, points: [prev, { x, y }] });
-                ctx.restore();
-            }
+            drawCropEditor();
         });
     }
 
