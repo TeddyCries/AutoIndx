@@ -82,7 +82,7 @@
         .collection-product-empty button { margin-top: 10px; border-color: var(--accent); color: var(--accent); }
         #captureWorkspace { display: flex; width: 100%; min-height: 0; flex: 1 1 auto; flex-direction: column; gap: 8px; overflow: hidden; }
         #countBadge { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; color: var(--accent); font-size: 13px; font-weight: 700; white-space: nowrap; }
-        #thumbnails { display: flex; flex: 0 1 70px; align-items: center; align-self: center; width: min(100%, 760px); min-height: 0; max-height: 70px; overflow-x: auto; gap: 7px; padding: 4px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        #thumbnails { display: flex; flex: 0 0 70px; align-items: center; align-self: center; width: min(100%, 760px); height: 70px; min-height: 70px; max-height: 70px; overflow-x: auto; gap: 7px; padding: 4px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         #thumbnails::-webkit-scrollbar { display: none; }
         .thumbnail-container { position: relative; flex: 0 0 auto; padding: 2px; }
         .thumbnail-edit { display: block; min-height: 0; padding: 0; border: 0; background: transparent; }
@@ -93,7 +93,11 @@
         .capture-header button { flex: 0 0 auto; border-color: rgba(67,214,173,.42); color: var(--accent); }
         .capture-header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #view-wrapper { position: relative; display: flex; flex: 1 1 0; align-items: center; justify-content: center; width: min(100%, 760px); height: auto; min-height: 0; max-height: none; margin: 0 auto; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #05080b; box-shadow: 0 18px 55px rgba(0,0,0,.3); }
-        video, #previewContainer { display: block; flex: 0 1 100%; min-width: 0; min-height: 0; width: 100%; height: 100%; object-fit: cover; }
+        #view-wrapper > video, #view-wrapper > #previewContainer { position: absolute; inset: 0; display: block; width: 100%; height: 100%; transition: opacity .18s ease; }
+        #view-wrapper > video { opacity: 1; object-fit: cover; }
+        #view-wrapper > #previewContainer { z-index: 1; display: flex; flex: 0 1 100%; min-width: 0; min-height: 0; opacity: 0; }
+        #view-wrapper.review-mode > video { opacity: 0; }
+        #view-wrapper.review-mode > #previewContainer { opacity: 1; }
         video { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         .debug-camera { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 24px; background: radial-gradient(circle at 50% 30%, #28443f, #111a20 70%); text-align: center; }
         .debug-camera-icon { display: grid; place-items: center; width: 74px; height: 74px; margin-bottom: 18px; border: 1px solid rgba(67,214,173,.4); border-radius: 24px; background: rgba(67,214,173,.12); color: var(--accent); font-size: 36px; }
@@ -121,8 +125,10 @@
         #view-wrapper { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         #whiteBalanceSelect { min-height: 40px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: #111820; color: inherit; font: inherit; }
         .gesture-help { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
-        #controls-container { width: min(100%, 760px); min-height: 0; margin: 0 auto; flex: 0 1 auto; }
+        #controls-container { width: min(100%, 760px); min-height: 0; margin: 0 auto; flex: 0 0 auto; }
         #reviewControls { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); }
+        #reviewControls.is-disabled { border-color: rgba(255,255,255,.07); background: rgba(20,28,37,.82); }
+        #reviewControls button:disabled { border-color: #39434e !important; background: #252e38 !important; color: #8995a2 !important; opacity: 1; cursor: not-allowed; }
         .selection-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
         .selection-button { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-width: 0; min-height: 64px; padding: 9px 12px; text-align: left; background: #202b37; }
         .selection-label { color: var(--muted); font-size: 11px; font-weight: 600; }
@@ -131,8 +137,16 @@
         .photo-actions-grid button { display: inline-flex; min-width: 0; align-items: center; justify-content: center; gap: 7px; padding: 10px 8px; font-size: 13px; }
         .photo-actions-grid button svg { flex: 0 0 auto; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
         #cropActions button:disabled { border-color: #39434e; background: #252e38; color: #8995a2; opacity: 1; }
-        #singlePhotoActions button:nth-child(3), #dualPhotoActions button:nth-child(2) { border-color: #40c99e; background: #137c60; }
-        #dualRetakeControls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #singlePhotoActions button:nth-child(3), #dualPhotoActions button:nth-child(4) { border-color: #40c99e; background: #137c60; }
+        #dualPhotoActions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #dualRetakeControls { grid-column: 1; grid-row: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: hidden; border: 1px solid rgba(255,193,7,.5); border-radius: 14px; }
+        #dualRetakeControls button { gap: 0; padding: 7px 2px; font-size: 11px; }
+        #dualRetakeControls button svg { display: none; }
+        #deleteReversoBtn { grid-column: 2; grid-row: 1; }
+        #saveDualBtn { grid-column: 1; grid-row: 2; }
+        #cancelDualBtn { grid-column: 2; grid-row: 2; }
+        #dualRetakeControls button { min-width: 0; min-height: 44px; border: 0; border-radius: 0; }
+        #dualRetakeControls #retakeReversoBtn { border-left: 1px solid rgba(33,37,41,.35); }
         #actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
         #actions button { display: inline-flex; min-width: 0; align-items: center; justify-content: center; gap: 7px; padding: 9px; text-align: center; }
         #actions button svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
@@ -379,10 +393,6 @@
     <div id="controls-container">
         <div id="reviewControls" class="oculto">
         <div id="editorBanner" class="manager-current oculto"><strong>Edita tu prenda</strong><span>Retoca la foto y cambia la talla o el precio.</span></div>
-        <div id="dualRetakeControls" class="photo-actions-grid oculto">
-            <button id="retakeFrontalBtn" type="button" aria-label="Retomar foto frontal" title="Retomar foto frontal" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Retomar frontal</span></button>
-            <button id="retakeReversoBtn" type="button" aria-label="Retomar foto reverso" title="Retomar foto reverso" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Retomar reverso</span></button>
-        </div>
         <div class="selection-row">
             <button id="sizePickerBtn" class="selection-button" type="button"><span class="selection-label">TALLA</span><span id="sizePickerValue" class="selection-value">Selecciona talla</span></button>
             <button id="pricePickerBtn" class="selection-button" type="button"><span class="selection-label">PRECIO</span><span id="pricePickerValue" class="selection-value">Selecciona precio</span></button>
@@ -438,7 +448,11 @@
             <button id="cancelSingleBtn" type="button" aria-label="Cancelar edición" title="Cancelar edición" style="background-color:#555;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span>Cancelar</span></button>
         </div>
         <div id="dualPhotoActions" class="photo-actions-grid oculto">
-            <button id="deleteReversoBtn" type="button" aria-label="Eliminar foto reverso" title="Eliminar foto reverso" style="background-color: #dc3545;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6"/><path d="M10 11v5m4-5v5"/></svg><span>Eliminar reverso</span></button>
+            <div id="dualRetakeControls" role="group" aria-label="Elegir qué lado retomar">
+                <button id="retakeFrontalBtn" type="button" aria-label="Retomar foto frontal" title="Retomar foto frontal" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Frontal</span></button>
+                <button id="retakeReversoBtn" type="button" aria-label="Retomar foto reverso" title="Retomar foto reverso" style="background-color: #ffc107; color: #212529;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.7L20 9"/></svg><span>Reverso</span></button>
+            </div>
+            <button id="deleteReversoBtn" type="button" aria-label="Eliminar foto reverso" title="Eliminar foto reverso" style="background-color: #dc3545;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6"/><path d="M10 11v5m4-5v5"/></svg><span>Quitar</span></button>
             <button id="saveDualBtn" type="button" aria-label="Guardar fotos" title="Guardar fotos" style="background-color: #28a745;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span>Guardar</span></button>
             <button id="cancelDualBtn" type="button" aria-label="Cancelar edición" title="Cancelar edición" style="background-color:#555;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span>Cancelar</span></button>
         </div>
@@ -548,7 +562,6 @@
     const saveZipBtn = document.getElementById('saveZipBtn');
     const actionsDiv = document.getElementById('actions');
     const thumbnails = document.getElementById("thumbnails");
-    const dualRetakeControls = document.getElementById('dualRetakeControls');
     const singlePhotoActions = document.getElementById('singlePhotoActions');
     const dualPhotoActions = document.getElementById('dualPhotoActions');
     const addReversoBtn = document.getElementById('addReversoBtn');
@@ -656,6 +669,7 @@
     let state = 'capturing';
     let retakeTarget = null;
     let thumbnailURLs = [];
+    let thumbnailRenderVersion = 0;
     let packages = [];
     let editingPackageId = null;
     let collectionPressTimer = null;
@@ -1136,6 +1150,7 @@
         editingPhotoId = null; editingProductName = null; isProductEditor = false;
         backgroundRemovedForCurrentProduct = false; skipBackgroundRemovalForCurrentProduct = false; currentImageIsDemo = false;
         editorReturnToDashboard = false;
+        viewWrapper.classList.remove('review-mode');
         video.classList.add('oculto'); debugCamera.classList.add('oculto'); previewContainer.classList.add('oculto');
         cameraControls.classList.add('oculto'); captureBtn.classList.add('oculto');
         reviewControls.classList.add('oculto'); cropModal.classList.add('oculto'); preparingOverlay.classList.add('oculto');
@@ -1870,7 +1885,6 @@
             cameraCapabilities = cameraTrack.getCapabilities ? cameraTrack.getCapabilities() : {};
             flashEnabled = false;
             syncCameraControls();
-            updateUI();
         } catch (error) {
             cameraTrack = null; imageCapture = null; cameraCapabilities = {};
             syncCameraControls();
@@ -1881,6 +1895,8 @@
         if (document.visibilityState === 'visible' && state === 'capturing' && !captureWorkspace.classList.contains('oculto')) initCamera();
     });
     captureBtn.addEventListener('click', async () => {
+        if (captureBtn.disabled) return;
+        captureBtn.disabled = true;
         try {
             const isNewCapture = state === 'capturing';
             const blob = debugWithoutCamera ? await createDebugCapture() : imageCapture ? await imageCapture.takePhoto() : await captureWithCanvas();
@@ -1894,7 +1910,11 @@
                 skipBackgroundRemovalForCurrentProduct = debugWithoutCamera;
             }
             showReviewMode();
-        } catch (error) { showToast('❌ No se pudo capturar la imagen. Inténtalo de nuevo.'); }
+        } catch (error) {
+            showToast(`❌ No se pudo capturar la imagen: ${error.message}`);
+        } finally {
+            captureBtn.disabled = state !== 'capturing' && state !== 'retaking';
+        }
     });
     function createDebugCapture() {
         return new Promise((resolve, reject) => {
@@ -2178,6 +2198,10 @@
     document.getElementById('pickerCloseBtn').addEventListener('click', () => navigateBack(closePicker));
     pickerModal.addEventListener('click', event => { if (event.target === pickerModal) navigateBack(closePicker); });
 
+    function setReviewControlsDisabled(disabled) {
+        reviewControls.querySelectorAll('button, select').forEach(control => { control.disabled = disabled; });
+        reviewControls.classList.toggle('is-disabled', disabled);
+    }
     function showCameraMode() {
         state = 'capturing'; retakeTarget = null;
         captureTitle.textContent = 'Tomar una foto';
@@ -2190,12 +2214,17 @@
         editorReturnToDashboard = false;
         preparingOverlay.classList.add('oculto'); cropModal.classList.add('oculto');
         sizeSelect.value = ""; priceSelect.value = "";
+        viewWrapper.classList.remove('review-mode');
         video.classList.toggle('oculto', debugWithoutCamera); debugCamera.classList.toggle('oculto', !debugWithoutCamera); previewContainer.classList.add('oculto');
         cameraControls.classList.toggle('oculto', debugWithoutCamera); captureBtn.classList.remove('oculto');
+        captureBtn.disabled = false;
         compositionGrid.classList.toggle('oculto', !compositionGridEnabled || debugWithoutCamera);
         advancedControls.classList.add('oculto'); advancedToggleBtn.setAttribute('aria-expanded', 'false');
         focusReticle.classList.add('oculto'); focusHint.classList.add('oculto');
-        reviewControls.classList.add('oculto'); dualRetakeControls.classList.add('oculto');
+        reviewControls.classList.remove('oculto');
+        editorBanner.classList.add('oculto'); cropActions.classList.add('oculto');
+        singlePhotoActions.classList.remove('oculto'); dualPhotoActions.classList.add('oculto');
+        setReviewControlsDisabled(true);
         thumbnails.classList.remove('disabled-thumbnails');
         if (!video.srcObject || !video.srcObject.active || video.srcObject.getTracks().length === 0 || video.srcObject.getTracks()[0].readyState !== 'live') initCamera();
         syncPickerButtons();
@@ -2203,10 +2232,13 @@
     }
     function showRetakeMode(target) {
         state = 'retaking'; retakeTarget = target;
+        viewWrapper.classList.remove('review-mode');
         video.classList.toggle('oculto', debugWithoutCamera); debugCamera.classList.toggle('oculto', !debugWithoutCamera); previewContainer.classList.add('oculto');
         cameraControls.classList.toggle('oculto', debugWithoutCamera); captureBtn.classList.remove('oculto');
+        captureBtn.disabled = false;
         compositionGrid.classList.add('oculto', !compositionGridEnabled || debugWithoutCamera);
-        reviewControls.classList.add('oculto'); thumbnails.classList.add('disabled-thumbnails');
+        reviewControls.classList.remove('oculto'); setReviewControlsDisabled(true);
+        thumbnails.classList.add('disabled-thumbnails');
         actionsDiv.classList.add('oculto');
         initCamera().then(() => {
             if (!debugWithoutCamera && !video.srcObject) { showToast('❌ No se pudo acceder a la cámara para retomar. Volviendo a la previsualización.'); showReviewMode(); }
@@ -2218,9 +2250,10 @@
         cameraTrack = null; imageCapture = null; cameraCapabilities = {};
         cameraControls.classList.add('oculto'); captureBtn.classList.add('oculto'); debugCamera.classList.add('oculto'); advancedControls.classList.add('oculto');
         compositionGrid.classList.add('oculto'); focusReticle.classList.add('oculto'); focusHint.classList.add('oculto');
+        viewWrapper.classList.add('review-mode');
         syncCameraControls();
-        video.classList.add('oculto'); previewContainer.classList.remove('oculto');
-        reviewControls.classList.remove('oculto'); thumbnails.classList.add('disabled-thumbnails');
+        previewContainer.classList.remove('oculto');
+        reviewControls.classList.remove('oculto'); setReviewControlsDisabled(false); thumbnails.classList.add('disabled-thumbnails');
         cropActions.classList.toggle('oculto', !isProductEditor);
         editorBanner.classList.toggle('oculto', !isProductEditor);
         actionsDiv.classList.add('oculto');
@@ -2229,11 +2262,11 @@
         if (fotoReversoBlob) {
             if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src); photoPreviewReverso.src = URL.createObjectURL(fotoReversoBlob);
             previewContainer.classList.add('dual-view'); photoPreviewReverso.classList.remove('oculto');
-            singlePhotoActions.classList.add('oculto'); dualPhotoActions.classList.remove('oculto'); dualRetakeControls.classList.remove('oculto');
+            singlePhotoActions.classList.add('oculto'); dualPhotoActions.classList.remove('oculto');
         } else {
             previewContainer.classList.remove('dual-view'); photoPreviewReverso.classList.add('oculto');
             if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
-            singlePhotoActions.classList.remove('oculto'); dualPhotoActions.classList.add('oculto'); dualRetakeControls.classList.add('oculto');
+            singlePhotoActions.classList.remove('oculto'); dualPhotoActions.classList.add('oculto');
         }
         const cropBackBtn = document.getElementById('cropBackBtn');
         cropBackBtn.disabled = !fotoReversoBlob;
@@ -2292,7 +2325,7 @@
             } else {
                 showCameraMode();
             }
-            renderCollectionWorkspace(); updateUI();
+            renderCollectionWorkspace();
             renderTemplatePreview().catch(error => showToast(`❌ No se pudo actualizar la vista previa: ${error.message}`));
         };
         tx.onerror = () => { showToast("❌ Error al guardar el producto."); };
@@ -2384,14 +2417,6 @@
     }
     saveZipBtn.addEventListener('click', () => exportCollectionZip(activePackageId));
 
-    function updateCounters() {
-        if (!db) return;
-        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onsuccess = e => {
-            const count = e.target.result.filter(item => (item.packageId || 'default') === activePackageId).length;
-            actionsDiv.classList.toggle('oculto', count === 0 || collectionDashboard.classList.contains('oculto'));
-            if (!collectionWorkspace.classList.contains('oculto')) countBadge.textContent = `${count} ${count === 1 ? 'prenda' : 'prendas'}`;
-        };
-    }
     function executeDelete(photoId, frontalUrl, reversoUrl) {
         if (!db) return;
         const transaction = db.transaction(OBJECT_STORE_NAME, "readwrite");
@@ -2438,18 +2463,26 @@
     }
     function updateUI() {
         if (!db) return;
-        updateCounters();
-        thumbnailURLs.forEach(url => URL.revokeObjectURL(url)); thumbnailURLs = []; thumbnails.innerHTML = '';
-        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onsuccess = (e) => {
-            const photos = e.target.result.filter(item => (item.packageId || 'default') === activePackageId);
-            photos.sort((a, b) => b.id - a.id);
-            photos.forEach(photoData => {
+        const renderVersion = ++thumbnailRenderVersion;
+        const packageId = activePackageId;
+        const request = db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll();
+        request.onsuccess = () => {
+            if (renderVersion !== thumbnailRenderVersion || packageId !== activePackageId) return;
+            const photos = request.result;
+            const packagePhotos = photos.filter(item => (item.packageId || 'default') === packageId);
+            const count = packagePhotos.length;
+            actionsDiv.classList.toggle('oculto', count === 0 || collectionDashboard.classList.contains('oculto'));
+            if (!collectionWorkspace.classList.contains('oculto')) countBadge.textContent = `${count} ${count === 1 ? 'prenda' : 'prendas'}`;
+            const fragment = document.createDocumentFragment();
+            const nextThumbnailURLs = [];
+            packagePhotos.sort((a, b) => b.id - a.id);
+            packagePhotos.forEach(photoData => {
                 const container = document.createElement('div'); container.className = 'thumbnail-container';
                 const editButton = document.createElement('button'); editButton.type = 'button'; editButton.className = 'thumbnail-edit';
                 editButton.setAttribute('aria-label', `Editar ${photoData.nombre || `prenda ${photoData.id}`}`);
                 const img = document.createElement('img');
                 img.alt = photoData.nombre || `Prenda ${photoData.id}`;
-                const url = URL.createObjectURL(photoData.foto); img.src = url; thumbnailURLs.push(url);
+                const url = URL.createObjectURL(photoData.foto); img.src = url; nextThumbnailURLs.push(url);
                 editButton.appendChild(img);
                 editButton.addEventListener('click', () => enterProductEditor(photoData));
                 container.appendChild(editButton);
@@ -2465,10 +2498,15 @@
                     }
                 });
                 container.appendChild(deleteButton);
-                thumbnails.appendChild(container);
+                fragment.appendChild(container);
             });
+            thumbnails.replaceChildren(fragment);
+            thumbnailURLs.forEach(url => URL.revokeObjectURL(url));
+            thumbnailURLs = nextThumbnailURLs;
         };
-        db.transaction(OBJECT_STORE_NAME, "readonly").objectStore(OBJECT_STORE_NAME).getAll().onerror = () => showToast("❌ Error al cargar las miniaturas.");
+        request.onerror = () => {
+            if (renderVersion === thumbnailRenderVersion) showToast("❌ Error al cargar las miniaturas.");
+        };
     }
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
         const serviceWorkerUrl = new URL('./sw.js', document.baseURI);

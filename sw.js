@@ -1,4 +1,4 @@
-const CACHE_NAME = 'autoindx-shell-v5';
+const CACHE_NAME = 'autoindx-shell-v11';
 const APP_SHELL = [
     './',
     './index.html',
