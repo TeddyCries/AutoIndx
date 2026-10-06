@@ -1,6 +1,6 @@
 import { createAlphaMaskEditor } from './alpha-mask-editor.js';
 import { createTemplateEditor } from './template-editor.js';
-import { removeBackgroundWithRmbg } from './rmbg-background-removal.js';
+import { removeBackgroundWithModnet } from './modnet-background-removal.js';
 
 const video = document.getElementById('video');
 const previewContainer = document.getElementById('previewContainer');
@@ -699,7 +699,7 @@ function enterProductEditor(item, { allowMaskEditing = true } = {}) {
     showReviewMode();
 }
 async function removeImageBackground(blob, onProgress = () => {}) {
-    return removeBackgroundWithRmbg(blob, { resizeForBackgroundRemoval, onProgress });
+    return removeBackgroundWithModnet(blob, { resizeForBackgroundRemoval, onProgress });
 }
 async function preparePackageImages(items) {
     preparingTitle.textContent = 'Generando máscara alfa…';
