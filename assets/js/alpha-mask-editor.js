@@ -28,17 +28,76 @@ export function createAlphaMaskEditor({
     let cropMultiTouch = false;
     let cropDrawingPointerId = null;
     let maskTool = 'restore';
-    let maskStrokes = [];
+    let maskStrokes = [];       // kept only for undo metadata
     let activeMaskStroke = null;
 
+    // Offscreen canvas that accumulates all strokes at full image resolution
+    let maskCanvas = null;
+    let maskCtx = null;
+
+    // ── Offscreen mask helpers ────────────────────────────────────────────────
+
+    function createMaskCanvas(w, h) {
+        maskCanvas = document.createElement('canvas');
+        maskCanvas.width = w;
+        maskCanvas.height = h;
+        maskCtx = maskCanvas.getContext('2d');
+    }
+
+    function rebuildMaskCanvas() {
+        if (!maskCanvas) return;
+        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        maskStrokes.forEach(stroke => applyStrokeToMask(stroke));
+    }
+
+    function applyStrokeToMask(stroke) {
+        if (!stroke.points.length) return;
+        if (stroke.tool === 'erase') {
+            maskCtx.save();
+            maskCtx.globalCompositeOperation = 'destination-out';
+            maskCtx.strokeStyle = '#000';
+            maskCtx.fillStyle = '#000';
+            drawBrushPath(maskCtx, stroke);
+            maskCtx.restore();
+            return;
+        }
+        if (!cropOriginalImage) return;
+        const padding = Math.ceil(stroke.size / 2) + 1;
+        const left   = Math.max(0, Math.floor(Math.min(...stroke.points.map(p => p.x)) - padding));
+        const top    = Math.max(0, Math.floor(Math.min(...stroke.points.map(p => p.y)) - padding));
+        const right  = Math.min(maskCanvas.width,  Math.ceil(Math.max(...stroke.points.map(p => p.x)) + padding));
+        const bottom = Math.min(maskCanvas.height, Math.ceil(Math.max(...stroke.points.map(p => p.y)) + padding));
+        const w = Math.max(1, right - left);
+        const h = Math.max(1, bottom - top);
+
+        const stencil = document.createElement('canvas');
+        stencil.width = w; stencil.height = h;
+        const stencilCtx = stencil.getContext('2d');
+        stencilCtx.strokeStyle = '#fff'; stencilCtx.fillStyle = '#fff';
+        drawBrushPath(stencilCtx, stroke, left, top);
+
+        const patch = document.createElement('canvas');
+        patch.width = w; patch.height = h;
+        const patchCtx = patch.getContext('2d');
+        patchCtx.drawImage(cropOriginalImage, -left, -top, maskCanvas.width, maskCanvas.height);
+        patchCtx.globalCompositeOperation = 'destination-in';
+        patchCtx.drawImage(stencil, 0, 0);
+        maskCtx.drawImage(patch, left, top);
+    }
+
+    // Apply only the last segment of the active stroke (incremental, fast)
+    function applyLastSegmentToMask(stroke) {
+        if (stroke.points.length < 2) {
+            applyStrokeToMask({ ...stroke, points: stroke.points });
+            return;
+        }
+        const pts = stroke.points;
+        applyStrokeToMask({ ...stroke, points: [pts[pts.length - 2], pts[pts.length - 1]] });
+    }
+
     // ── Coordinate helpers ────────────────────────────────────────────────────
-    // The canvas internal size always equals the image size.
-    // CSS makes it fit inside the viewport with object-fit:contain.
-    // We need to find the actual rendered rect of the image inside the canvas element.
 
     function getContainRect() {
-        // Returns the sub-rect (in client coords) where the image is actually drawn
-        // inside the canvas element, respecting object-fit:contain.
         const b = cropCanvas.getBoundingClientRect();
         const imgW = cropCanvas.width;
         const imgH = cropCanvas.height;
@@ -47,20 +106,17 @@ export function createAlphaMaskEditor({
         const renderedH = imgH * scale;
         return {
             left: b.left + (b.width - renderedW) / 2,
-            top: b.top + (b.height - renderedH) / 2,
-            width: renderedW,
-            height: renderedH,
-            scale // client px per image px
+            top:  b.top  + (b.height - renderedH) / 2,
+            scale
         };
     }
 
     function clientToImage(clientX, clientY) {
         const r = getContainRect();
         const rawX = (clientX - r.left) / r.scale;
-        const rawY = (clientY - r.top) / r.scale;
+        const rawY = (clientY - r.top)  / r.scale;
         const cx = cropCanvas.width / 2;
         const cy = cropCanvas.height / 2;
-        // Invert: translate(-cx,-cy) -> scale(zoom) -> rotate -> translate(cx+panX, cy+panY)
         const dx = (rawX - cx - cropPanX) / cropZoom;
         const dy = (rawY - cy - cropPanY) / cropZoom;
         const cos = Math.cos(-cropRotation);
@@ -71,7 +127,7 @@ export function createAlphaMaskEditor({
         };
     }
 
-    // ── Drawing ───────────────────────────────────────────────────────────────
+    // ── View transform ────────────────────────────────────────────────────────
 
     function applyViewTransform(ctx) {
         const cx = cropCanvas.width / 2;
@@ -82,6 +138,8 @@ export function createAlphaMaskEditor({
         ctx.scale(cropZoom, cropZoom);
         ctx.translate(-cx, -cy);
     }
+
+    // ── Brush path (image-space coords) ──────────────────────────────────────
 
     function drawBrushPath(ctx, stroke, offsetX = 0, offsetY = 0) {
         const [first, ...rest] = stroke.points;
@@ -99,45 +157,10 @@ export function createAlphaMaskEditor({
         ctx.stroke();
     }
 
-    function drawMaskStroke(ctx, stroke) {
-        if (!stroke.points.length) return;
-        if (stroke.tool === 'erase') {
-            ctx.save();
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.strokeStyle = '#000';
-            ctx.fillStyle = '#000';
-            drawBrushPath(ctx, stroke);
-            ctx.restore();
-            return;
-        }
-        if (!cropOriginalImage) return;
-        const padding = Math.ceil(stroke.size / 2) + 1;
-        const left   = Math.max(0, Math.floor(Math.min(...stroke.points.map(p => p.x)) - padding));
-        const top    = Math.max(0, Math.floor(Math.min(...stroke.points.map(p => p.y)) - padding));
-        const right  = Math.min(ctx.canvas.width,  Math.ceil(Math.max(...stroke.points.map(p => p.x)) + padding));
-        const bottom = Math.min(ctx.canvas.height, Math.ceil(Math.max(...stroke.points.map(p => p.y)) + padding));
-        const w = Math.max(1, right - left);
-        const h = Math.max(1, bottom - top);
-
-        const maskC = document.createElement('canvas');
-        maskC.width = w; maskC.height = h;
-        const maskCtx = maskC.getContext('2d');
-        if (!maskCtx) return;
-        maskCtx.strokeStyle = '#fff'; maskCtx.fillStyle = '#fff';
-        drawBrushPath(maskCtx, stroke, left, top);
-
-        const restC = document.createElement('canvas');
-        restC.width = w; restC.height = h;
-        const restCtx = restC.getContext('2d');
-        if (!restCtx) return;
-        restCtx.drawImage(cropOriginalImage, -left, -top, ctx.canvas.width, ctx.canvas.height);
-        restCtx.globalCompositeOperation = 'destination-in';
-        restCtx.drawImage(maskC, 0, 0);
-        ctx.drawImage(restC, left, top);
-    }
+    // ── Main render (O(1) regardless of stroke count) ─────────────────────────
 
     function drawCropEditor() {
-        if (!cropImage) return;
+        if (!cropImage || !maskCanvas) return;
         const ctx = cropCanvas.getContext('2d');
         if (!ctx) return;
         ctx.save();
@@ -145,7 +168,7 @@ export function createAlphaMaskEditor({
         ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
         applyViewTransform(ctx);
         ctx.drawImage(cropImage, 0, 0, cropCanvas.width, cropCanvas.height);
-        maskStrokes.forEach(stroke => drawMaskStroke(ctx, stroke));
+        ctx.drawImage(maskCanvas, 0, 0, cropCanvas.width, cropCanvas.height);
         ctx.restore();
         document.getElementById('cropZoomIndicator').textContent =
             `${Math.round(cropZoom * 100)}%${cropRotation !== 0 ? ' ' + Math.round(cropRotation * 180 / Math.PI) + '°' : ''}`;
@@ -193,13 +216,14 @@ export function createAlphaMaskEditor({
         cropZoom = Math.min(5, Math.max(1, cropPinch.startZoom * distanceBetweenPointers() / cropPinch.startDistance));
         cropRotation = cropPinch.startRotation + (angleOfPointers() - cropPinch.startAngle);
 
-        if (cropZoom <= 1) { cropZoom = 1; cropPanX = 0; cropPanY = 0; cropRotation = 0; drawCropEditor(); return; }
+        if (cropZoom <= 1) {
+            cropZoom = 1; cropPanX = 0; cropPanY = 0; cropRotation = 0;
+            drawCropEditor(); return;
+        }
 
-        // Keep anchorImage fixed under mid after applying new zoom+rotation:
-        // rawMid = rotate(rotation) * scale(zoom) * (anchor - center) + center + pan
         const r = getContainRect();
         const rawMidX = (mid.x - r.left) / r.scale;
-        const rawMidY = (mid.y - r.top) / r.scale;
+        const rawMidY = (mid.y - r.top)  / r.scale;
         const cx = cropCanvas.width / 2;
         const cy = cropCanvas.height / 2;
         const adx = cropPinch.anchorImage.x - cx;
@@ -223,6 +247,7 @@ export function createAlphaMaskEditor({
         const pt = clientToImage(event.clientX, event.clientY);
         activeMaskStroke = { tool: maskTool, size: Number(maskBrushSize.value), points: [pt] };
         maskStrokes.push(activeMaskStroke);
+        applyStrokeToMask(activeMaskStroke);
         drawCropEditor();
         syncMaskTools();
     }
@@ -246,6 +271,7 @@ export function createAlphaMaskEditor({
             const prev = activeMaskStroke.points[activeMaskStroke.points.length - 1];
             if (Math.hypot(x - prev.x, y - prev.y) < 0.5) return;
             activeMaskStroke.points.push({ x, y });
+            applyLastSegmentToMask(activeMaskStroke);
             drawCropEditor();
         });
     }
@@ -261,6 +287,7 @@ export function createAlphaMaskEditor({
         const cancelGesture = cropMultiTouch || event.type === 'pointercancel';
         if (cancelGesture && activeMaskStroke && maskStrokes[maskStrokes.length - 1] === activeMaskStroke) {
             maskStrokes.pop();
+            rebuildMaskCanvas();
             drawCropEditor();
         }
         cropMultiTouch = false;
@@ -281,17 +308,11 @@ export function createAlphaMaskEditor({
             cropOriginalImage = original;
             maskStrokes = [];
             activeMaskStroke = null;
-            cropZoom = 1;
-            cropPanX = 0;
-            cropPanY = 0;
-            cropRotation = 0;
-            cropPointers.clear();
-            cropPinch = null;
-            cropMultiTouch = false;
-            cropDrawingPointerId = null;
-            // Canvas internal size = image size (so apply() is trivial)
+            cropZoom = 1; cropPanX = 0; cropPanY = 0; cropRotation = 0;
+            cropPointers.clear(); cropPinch = null; cropMultiTouch = false; cropDrawingPointerId = null;
             cropCanvas.width = image.width;
             cropCanvas.height = image.height;
+            createMaskCanvas(image.width, image.height);
             document.getElementById('cropZoomIndicator').textContent = '100%';
             maskTool = getImage(target).backgroundRemoved ? 'restore' : 'erase';
             document.getElementById('maskRestoreToolBtn').disabled = !original;
@@ -314,24 +335,19 @@ export function createAlphaMaskEditor({
             : 'Pinta para hacer transparente el fondo.';
     }
 
-    function setMaskTool(tool) {
-        maskTool = tool;
-        syncMaskTools();
-        drawCropEditor();
-    }
+    function setMaskTool(tool) { maskTool = tool; syncMaskTools(); drawCropEditor(); }
 
     // ── Apply / restore ───────────────────────────────────────────────────────
 
     async function apply() {
-        if (!cropImage) return;
+        if (!cropImage || !maskCanvas) return;
         const canvas = document.createElement('canvas');
         canvas.width = cropImage.width;
         canvas.height = cropImage.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) { showToast('❌ No se pudo retocar la foto.'); return; }
-        // Strokes are already in image-pixel coords, no transform needed
         ctx.drawImage(cropImage, 0, 0);
-        maskStrokes.forEach(stroke => drawMaskStroke(ctx, stroke));
+        ctx.drawImage(maskCanvas, 0, 0);
         try {
             const { photo, originalPhoto } = getImage(cropTarget);
             setImage(cropTarget, await canvasToBlob(canvas), originalPhoto || photo);
@@ -356,14 +372,11 @@ export function createAlphaMaskEditor({
 
     function close() {
         cropModal.classList.add('oculto');
-        cropImage = null;
-        cropOriginalImage = null;
-        activeMaskStroke = null;
-        maskStrokes = [];
-        cropPointers.clear();
-        cropPinch = null;
-        cropMultiTouch = false;
-        cropDrawingPointerId = null;
+        cropImage = null; cropOriginalImage = null;
+        maskCanvas = null; maskCtx = null;
+        activeMaskStroke = null; maskStrokes = [];
+        cropPointers.clear(); cropPinch = null;
+        cropMultiTouch = false; cropDrawingPointerId = null;
         return true;
     }
 
@@ -380,16 +393,15 @@ export function createAlphaMaskEditor({
     maskUndoBtn.addEventListener('click', () => {
         if (!maskStrokes.length) return;
         maskStrokes.pop();
+        rebuildMaskCanvas();
         syncMaskTools();
         drawCropEditor();
     });
     document.getElementById('maskResetBtn').addEventListener('click', () => {
         if (!cropImage) return;
         maskStrokes = [];
-        cropZoom = 1;
-        cropPanX = 0;
-        cropPanY = 0;
-        cropRotation = 0;
+        rebuildMaskCanvas();
+        cropZoom = 1; cropPanX = 0; cropPanY = 0; cropRotation = 0;
         syncMaskTools();
         drawCropEditor();
     });
