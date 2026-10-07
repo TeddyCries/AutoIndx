@@ -60,7 +60,7 @@ export function createAlphaMaskEditor({
         maskCtx.save();
         maskCtx.strokeStyle = stroke.tool === 'erase' ? '#000' : '#fff';
         maskCtx.fillStyle   = stroke.tool === 'erase' ? '#000' : '#fff';
-        maskCtx.globalCompositeOperation = stroke.tool === 'erase' ? 'destination-out' : 'destination-in';
+        maskCtx.globalCompositeOperation = stroke.tool === 'erase' ? 'destination-out' : 'source-over';
         drawBrushPath(maskCtx, stroke);
         maskCtx.restore();
     }
