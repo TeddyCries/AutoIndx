@@ -16,22 +16,6 @@ export function createTemplateEditor({
     const templateBackgroundStatus = document.getElementById('templateBackgroundStatus');
     const templateBackgroundThumb = document.getElementById('templateBackgroundThumb');
     const removeTemplateBackgroundBtn = document.getElementById('removeTemplateBackgroundBtn');
-    const templateTextColor = document.getElementById('templateTextColor');
-    const templateFontSize = document.getElementById('templateFontSize');
-    const templateFontSizeValue = document.getElementById('templateFontSizeValue');
-    const templateProductScale = document.getElementById('templateProductScale');
-    const templateProductScaleValue = document.getElementById('templateProductScaleValue');
-    const templateMargin = document.getElementById('templateMargin');
-    const templateMarginValue = document.getElementById('templateMarginValue');
-    const templateSelectProductBtn = document.getElementById('templateSelectProductBtn');
-    const templateSelectTextBtn = document.getElementById('templateSelectTextBtn');
-    const templateSettingsModal = document.getElementById('templateSettingsModal');
-    const templateSettingsTitle = document.getElementById('templateSettingsTitle');
-    const templateSettingSections = {
-        background: document.getElementById('templateBackgroundSettings'),
-        product: document.getElementById('templateProductSettings'),
-        text: document.getElementById('templateTextSettings')
-    };
 
     let settings = {
         bgColor: '#340000',
@@ -46,8 +30,6 @@ export function createTemplateEditor({
         textOffsetY: 0
     };
     let backgroundUrl = null;
-    let selectedLayer = 'product';
-    let renderScheduled = false;
 
     async function initialize(savedSettings) {
         if (savedSettings) {
@@ -55,18 +37,7 @@ export function createTemplateEditor({
             delete savedSettings.jeansAge;
             settings = { ...settings, ...savedSettings };
         }
-        templateTextColor.value = settings.textColor;
-        templateFontSize.value = settings.fontSize;
-        templateProductScale.value = Math.round((settings.productScale || 1) * 100);
-        templateMargin.value = settings.margin;
         syncBackgroundControl();
-        syncLabels();
-    }
-
-    function syncLabels() {
-        templateFontSizeValue.textContent = `${templateFontSize.value} px`;
-        templateProductScaleValue.textContent = `${templateProductScale.value}%`;
-        templateMarginValue.textContent = `${templateMargin.value}%`;
     }
 
     function syncBackgroundControl() {
@@ -86,13 +57,6 @@ export function createTemplateEditor({
     }
 
     async function persist() {
-        settings = {
-            ...settings,
-            textColor: templateTextColor.value,
-            fontSize: Number(templateFontSize.value),
-            productScale: Number(templateProductScale.value) / 100,
-            margin: Number(templateMargin.value)
-        };
         await storeRequest(settingsStoreName, 'readwrite', 'put', { ...settings, id: 'template' });
     }
 
@@ -110,11 +74,11 @@ export function createTemplateEditor({
             const background = await loadImageBlob(settings.background);
             context.drawImage(background, 0, 0, 1920, 1920);
         }
-        const margin = 1920 * Number(templateMargin.value) / 100;
-        const fontSize = Number(templateFontSize.value);
+        const margin = 1920 * settings.margin / 100;
+        const fontSize = settings.fontSize;
         const maxWidth = 960 - margin * 2;
         const maxHeight = 1920 - margin * 3 - fontSize;
-        const productScale = Number(templateProductScale.value) / 100;
+        const productScale = settings.productScale;
         const productOffsetX = Number(settings.productOffsetX) || 0;
         const productOffsetY = Number(settings.productOffsetY) || 0;
         const drawContained = (image, x, y, width, height) => {
@@ -157,7 +121,7 @@ export function createTemplateEditor({
         context.lineJoin = 'round';
         context.lineWidth = 8;
         context.strokeStyle = 'rgba(20,20,20,1)';
-        context.fillStyle = templateTextColor.value;
+        context.fillStyle = settings.textColor;
         if (product) {
             context.strokeText(product.talla || '', textX, sizeY);
             context.fillText(product.talla || '', textX, sizeY);
@@ -173,18 +137,6 @@ export function createTemplateEditor({
         const products = await getProducts();
         const product = products.sort((left, right) => left.id - right.id)[0] || null;
         await drawProductTemplate(templatePreview, product, 600);
-    }
-
-    function selectLayer(layer) {
-        selectedLayer = layer;
-        templateSelectProductBtn.setAttribute('aria-pressed', String(layer === 'product'));
-        templateSelectTextBtn.setAttribute('aria-pressed', String(layer === 'text'));
-    }
-
-    function closeSettings() {
-        templateSettingsModal.classList.add('oculto');
-        Object.values(templateSettingSections).forEach(section => section.classList.add('oculto'));
-        return true;
     }
 
     function close() {
@@ -206,25 +158,6 @@ export function createTemplateEditor({
 
     document.getElementById('templateOpenBtn').addEventListener('click', open);
     document.getElementById('templateCloseBtn').addEventListener('click', () => navigateBack(close));
-    document.querySelectorAll('[data-template-settings]').forEach(button => {
-        button.addEventListener('click', () => {
-            const setting = button.dataset.templateSettings;
-            const section = templateSettingSections[setting];
-            if (!section) return;
-            const titles = { background: 'Fondo', product: 'Prenda', text: 'Talla y precio' };
-            templateSettingsTitle.textContent = titles[setting];
-            Object.values(templateSettingSections).forEach(item => item.classList.add('oculto'));
-            section.classList.remove('oculto');
-            if (templateSettingsModal.classList.contains('oculto')) {
-                pushAppNavigation('template-settings', closeSettings);
-            }
-            templateSettingsModal.classList.remove('oculto');
-        });
-    });
-    document.getElementById('templateSettingsCloseBtn').addEventListener('click', () => navigateBack(closeSettings));
-    templateSettingsModal.addEventListener('click', event => {
-        if (event.target === templateSettingsModal) navigateBack(closeSettings);
-    });
     document.getElementById('saveTemplateBtn').addEventListener('click', async () => {
         try {
             await persist();
@@ -258,27 +191,10 @@ export function createTemplateEditor({
             showToast(`❌ No se pudo usar la imagen: ${error.message}`);
         }
     });
-    for (const input of [templateTextColor, templateFontSize, templateProductScale, templateMargin]) {
-        input.addEventListener('input', () => {
-            syncLabels();
-            renderPreview().catch(error => showToast(`❌ No se pudo actualizar el lienzo: ${error.message}`));
-        });
-        input.addEventListener('change', async () => {
-            try {
-                await persist();
-                await renderPreview();
-            } catch (error) {
-                showToast(`❌ No se pudo guardar el diseño: ${error.message}`);
-            }
-        });
-    }
     document.getElementById('exportRenderedBtn').addEventListener('click', onExport);
 
     return {
-        closeAll() {
-            close();
-            closeSettings();
-        },
+        closeAll() { close(); },
         drawProductTemplate,
         getBackground: () => settings.background,
         initialize,
