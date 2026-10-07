@@ -47,7 +47,6 @@ export function createTemplateEditor({
     };
     let backgroundUrl = null;
     let selectedLayer = 'product';
-    let drag = null;
     let renderScheduled = false;
 
     async function initialize(savedSettings) {
@@ -207,8 +206,6 @@ export function createTemplateEditor({
 
     document.getElementById('templateOpenBtn').addEventListener('click', open);
     document.getElementById('templateCloseBtn').addEventListener('click', () => navigateBack(close));
-    templateSelectProductBtn.addEventListener('click', () => selectLayer('product'));
-    templateSelectTextBtn.addEventListener('click', () => selectLayer('text'));
     document.querySelectorAll('[data-template-settings]').forEach(button => {
         button.addEventListener('click', () => {
             const setting = button.dataset.templateSettings;
@@ -276,42 +273,6 @@ export function createTemplateEditor({
         });
     }
     document.getElementById('exportRenderedBtn').addEventListener('click', onExport);
-    templatePreview.addEventListener('pointerdown', event => {
-        const bounds = templatePreview.getBoundingClientRect();
-        drag = {
-            pointerId: event.pointerId,
-            x: event.clientX,
-            y: event.clientY,
-            offsetX: Number(settings[selectedLayer === 'product' ? 'productOffsetX' : 'textOffsetX']) || 0,
-            offsetY: Number(settings[selectedLayer === 'product' ? 'productOffsetY' : 'textOffsetY']) || 0,
-            scaleX: 1920 / bounds.width,
-            scaleY: 1920 / bounds.height
-        };
-        templatePreview.setPointerCapture(event.pointerId);
-    });
-    templatePreview.addEventListener('pointermove', event => {
-        if (!drag || event.pointerId !== drag.pointerId) return;
-        const prefix = selectedLayer === 'product' ? 'product' : 'text';
-        settings[`${prefix}OffsetX`] = drag.offsetX + (event.clientX - drag.x) * drag.scaleX;
-        settings[`${prefix}OffsetY`] = drag.offsetY + (event.clientY - drag.y) * drag.scaleY;
-        if (renderScheduled) return;
-        renderScheduled = true;
-        requestAnimationFrame(() => {
-            renderScheduled = false;
-            renderPreview().catch(error => showToast(`❌ No se pudo actualizar el lienzo: ${error.message}`));
-        });
-    });
-    const finishDrag = async event => {
-        if (!drag || event.pointerId !== drag.pointerId) return;
-        drag = null;
-        try {
-            await persist();
-        } catch (error) {
-            showToast(`❌ No se pudo guardar la posición: ${error.message}`);
-        }
-    };
-    templatePreview.addEventListener('pointerup', finishDrag);
-    templatePreview.addEventListener('pointercancel', finishDrag);
 
     return {
         closeAll() {
