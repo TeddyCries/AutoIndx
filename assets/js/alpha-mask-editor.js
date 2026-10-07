@@ -42,55 +42,31 @@ export function createAlphaMaskEditor({
         maskCanvas.width = w;
         maskCanvas.height = h;
         maskCtx = maskCanvas.getContext('2d');
+        // Start fully opaque white = everything visible
+        maskCtx.fillStyle = '#fff';
+        maskCtx.fillRect(0, 0, w, h);
     }
 
     function rebuildMaskCanvas() {
         if (!maskCanvas) return;
         maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        maskCtx.fillStyle = '#fff';
+        maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
         maskStrokes.forEach(stroke => applyStrokeToMask(stroke));
     }
 
     function applyStrokeToMask(stroke) {
         if (!stroke.points.length) return;
-        if (stroke.tool === 'erase') {
-            maskCtx.save();
-            maskCtx.globalCompositeOperation = 'destination-out';
-            maskCtx.strokeStyle = '#000';
-            maskCtx.fillStyle = '#000';
-            drawBrushPath(maskCtx, stroke);
-            maskCtx.restore();
-            return;
-        }
-        if (!cropOriginalImage) return;
-        const padding = Math.ceil(stroke.size / 2) + 1;
-        const left   = Math.max(0, Math.floor(Math.min(...stroke.points.map(p => p.x)) - padding));
-        const top    = Math.max(0, Math.floor(Math.min(...stroke.points.map(p => p.y)) - padding));
-        const right  = Math.min(maskCanvas.width,  Math.ceil(Math.max(...stroke.points.map(p => p.x)) + padding));
-        const bottom = Math.min(maskCanvas.height, Math.ceil(Math.max(...stroke.points.map(p => p.y)) + padding));
-        const w = Math.max(1, right - left);
-        const h = Math.max(1, bottom - top);
-
-        const stencil = document.createElement('canvas');
-        stencil.width = w; stencil.height = h;
-        const stencilCtx = stencil.getContext('2d');
-        stencilCtx.strokeStyle = '#fff'; stencilCtx.fillStyle = '#fff';
-        drawBrushPath(stencilCtx, stroke, left, top);
-
-        const patch = document.createElement('canvas');
-        patch.width = w; patch.height = h;
-        const patchCtx = patch.getContext('2d');
-        patchCtx.drawImage(cropOriginalImage, -left, -top, maskCanvas.width, maskCanvas.height);
-        patchCtx.globalCompositeOperation = 'destination-in';
-        patchCtx.drawImage(stencil, 0, 0);
-        maskCtx.drawImage(patch, left, top);
+        maskCtx.save();
+        maskCtx.strokeStyle = stroke.tool === 'erase' ? '#000' : '#fff';
+        maskCtx.fillStyle   = stroke.tool === 'erase' ? '#000' : '#fff';
+        maskCtx.globalCompositeOperation = stroke.tool === 'erase' ? 'destination-out' : 'destination-in';
+        drawBrushPath(maskCtx, stroke);
+        maskCtx.restore();
     }
 
-    // Apply only the last segment of the active stroke (incremental, fast)
     function applyLastSegmentToMask(stroke) {
-        if (stroke.points.length < 2) {
-            applyStrokeToMask({ ...stroke, points: stroke.points });
-            return;
-        }
+        if (stroke.points.length < 2) { applyStrokeToMask(stroke); return; }
         const pts = stroke.points;
         applyStrokeToMask({ ...stroke, points: [pts[pts.length - 2], pts[pts.length - 1]] });
     }
@@ -168,7 +144,9 @@ export function createAlphaMaskEditor({
         ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
         applyViewTransform(ctx);
         ctx.drawImage(cropImage, 0, 0, cropCanvas.width, cropCanvas.height);
+        ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(maskCanvas, 0, 0, cropCanvas.width, cropCanvas.height);
+        ctx.globalCompositeOperation = 'source-over';
         ctx.restore();
         document.getElementById('cropZoomIndicator').textContent =
             `${Math.round(cropZoom * 100)}%${cropRotation !== 0 ? ' ' + Math.round(cropRotation * 180 / Math.PI) + '°' : ''}`;
