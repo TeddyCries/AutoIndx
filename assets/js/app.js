@@ -944,12 +944,7 @@ function openPicker(type) {
         customChoice.type = 'button';
         customChoice.className = 'custom-price-choice';
         customChoice.setAttribute('aria-label', 'Escribir un precio personalizado');
-        const plus = document.createElement('span');
-        plus.className = 'custom-price-plus';
-        plus.textContent = '$ +';
-        const label = document.createElement('span');
-        label.textContent = 'Precio personalizado';
-        customChoice.append(plus, label);
+        customChoice.textContent = '+';
         customChoice.addEventListener('click', openCustomPriceModal);
         pickerGrid.appendChild(customChoice);
     }
