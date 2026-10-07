@@ -22,12 +22,7 @@ export function createTemplateEditor({
         textColor: '#ffffff',
         fontSize: 192,
         margin: 2.5,
-        background: null,
-        productOffsetX: 0,
-        productOffsetY: 0,
-        productScale: 1,
-        textOffsetX: 0,
-        textOffsetY: 0
+        background: null
     };
     let backgroundUrl = null;
 
@@ -76,33 +71,33 @@ export function createTemplateEditor({
         }
         const margin = 1920 * settings.margin / 100;
         const fontSize = settings.fontSize;
-        const maxWidth = 960 - margin * 2;
-        const maxHeight = 1920 - margin * 3 - fontSize;
-        const productScale = settings.productScale;
-        const productOffsetX = Number(settings.productOffsetX) || 0;
-        const productOffsetY = Number(settings.productOffsetY) || 0;
-        const drawContained = (image, x, y, width, height) => {
-            const ratio = Math.min(width / image.width, height / image.height);
-            const scaledWidth = image.width * ratio * productScale;
-            const scaledHeight = image.height * ratio * productScale;
-            context.drawImage(
-                image,
-                x + (width - scaledWidth) / 2 + productOffsetX,
-                y + (height - scaledHeight) / 2 + productOffsetY,
-                scaledWidth,
-                scaledHeight
-            );
+        const maxW = 960 - margin * 2;
+        const maxH = 1920 - margin * 3 - fontSize;
+
+        const getScaled = (image) => {
+            const ratio = Math.min(maxW / image.width, maxH / image.height);
+            return { w: image.width * ratio, h: image.height * ratio };
         };
+
         if (product) {
             const front = await loadImageBlob(product.foto);
+            const fs = getScaled(front);
             if (product.fotoReverso) {
                 const back = await loadImageBlob(product.fotoReverso);
-                drawContained(front, 1920 - margin - maxWidth, margin, maxWidth, maxHeight);
-                drawContained(back, margin, 1920 - margin - maxHeight - fontSize - 60, maxWidth, maxHeight);
+                const bs = getScaled(back);
+                // Frontal: derecha arriba
+                const fx = 1920 - margin - fs.w;
+                const fy = margin;
+                // Reverso: izquierda abajo
+                const bx = margin;
+                const by = 1920 - margin - bs.h - fontSize - 60;
+                context.drawImage(front, fx, fy, fs.w, fs.h);
+                context.drawImage(back, bx, by, bs.w, bs.h);
             } else {
-                const imageWidth = Math.min(maxWidth, 1920 - margin * 2);
-                const imageHeight = Math.min(maxHeight, 1920 - margin * 2 - fontSize - 120);
-                drawContained(front, margin, margin, imageWidth, imageHeight);
+                // Sin reverso: centrada
+                const fx = (1920 - fs.w) / 2;
+                const fy = (1920 - fs.h) / 2;
+                context.drawImage(front, fx, fy, fs.w, fs.h);
             }
         } else {
             context.fillStyle = 'rgba(255,255,255,.12)';
@@ -115,8 +110,8 @@ export function createTemplateEditor({
         context.font = `${fontSize}px Arial, sans-serif`;
         context.textAlign = 'left';
         context.textBaseline = 'alphabetic';
-        const textX = margin + 30 + (Number(settings.textOffsetX) || 0);
-        const priceY = 1920 - margin - fontSize - 100 + (Number(settings.textOffsetY) || 0);
+        const textX = margin + 30;
+        const priceY = 1920 - margin - fontSize - 100;
         const sizeY = priceY - fontSize * 1.1;
         context.lineJoin = 'round';
         context.lineWidth = 8;
