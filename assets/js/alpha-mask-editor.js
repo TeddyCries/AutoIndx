@@ -34,6 +34,17 @@ export function createAlphaMaskEditor({
     // Offscreen canvas that accumulates all strokes at full image resolution
     let maskCanvas = null;
     let maskCtx = null;
+    let renderPending = false;
+    let containRect = null;
+
+    function requestCropRender() {
+        if (renderPending) return;
+        renderPending = true;
+        requestAnimationFrame(() => {
+            renderPending = false;
+            drawCropEditor();
+        });
+    }
 
     // ── Offscreen mask helpers ────────────────────────────────────────────────
 
@@ -73,18 +84,19 @@ export function createAlphaMaskEditor({
 
     // ── Coordinate helpers ────────────────────────────────────────────────────
 
-    function getContainRect() {
+    function updateContainRect() {
         const b = cropCanvas.getBoundingClientRect();
-        const imgW = cropCanvas.width;
-        const imgH = cropCanvas.height;
-        const scale = Math.min(b.width / imgW, b.height / imgH);
-        const renderedW = imgW * scale;
-        const renderedH = imgH * scale;
-        return {
-            left: b.left + (b.width - renderedW) / 2,
-            top:  b.top  + (b.height - renderedH) / 2,
+        const scale = Math.min(b.width / cropCanvas.width, b.height / cropCanvas.height);
+        containRect = {
+            left: b.left + (b.width  - cropCanvas.width  * scale) / 2,
+            top:  b.top  + (b.height - cropCanvas.height * scale) / 2,
             scale
         };
+    }
+
+    function getContainRect() {
+        if (!containRect) updateContainRect();
+        return containRect;
     }
 
     function clientToImage(clientX, clientY) {
@@ -250,8 +262,8 @@ export function createAlphaMaskEditor({
             if (Math.hypot(x - prev.x, y - prev.y) < 0.5) return;
             activeMaskStroke.points.push({ x, y });
             applyLastSegmentToMask(activeMaskStroke);
-            drawCropEditor();
         });
+        requestCropRender();
     }
 
     function finishCropPointer(event) {
@@ -290,6 +302,7 @@ export function createAlphaMaskEditor({
             cropPointers.clear(); cropPinch = null; cropMultiTouch = false; cropDrawingPointerId = null;
             cropCanvas.width = image.width;
             cropCanvas.height = image.height;
+            containRect = null;
             createMaskCanvas(image.width, image.height);
             document.getElementById('cropZoomIndicator').textContent = '100%';
             maskTool = getImage(target).backgroundRemoved ? 'restore' : 'erase';
@@ -383,6 +396,7 @@ export function createAlphaMaskEditor({
         syncMaskTools();
         drawCropEditor();
     });
+    window.addEventListener('resize', () => { containRect = null; });
     cropCanvas.addEventListener('pointerdown', beginCropPointer);
     cropCanvas.addEventListener('pointermove', updateCropPointer);
     cropCanvas.addEventListener('pointerup', finishCropPointer);
