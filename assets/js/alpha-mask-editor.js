@@ -28,10 +28,10 @@ export function createAlphaMaskEditor({
     let cropMultiTouch = false;
     let cropDrawingPointerId = null;
     let maskTool = 'restore';
-    let maskStrokes = [];       // kept only for undo metadata
+    let maskStrokes = [];
     let activeMaskStroke = null;
 
-    // Offscreen canvas that accumulates all strokes at full image resolution
+    // Offscreen image that accumulates edits at full image resolution
     let maskCanvas = null;
     let maskCtx = null;
     let renderPending = false;
@@ -53,25 +53,36 @@ export function createAlphaMaskEditor({
         maskCanvas.width = w;
         maskCanvas.height = h;
         maskCtx = maskCanvas.getContext('2d');
-        // Start fully opaque white = everything visible
-        maskCtx.fillStyle = '#fff';
-        maskCtx.fillRect(0, 0, w, h);
+        if (!maskCtx) throw new Error('No se pudo preparar el editor de máscara.');
+        maskCtx.drawImage(cropImage, 0, 0, w, h);
     }
 
     function rebuildMaskCanvas() {
         if (!maskCanvas) return;
         maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-        maskCtx.fillStyle = '#fff';
-        maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+        maskCtx.drawImage(cropImage, 0, 0, maskCanvas.width, maskCanvas.height);
         maskStrokes.forEach(stroke => applyStrokeToMask(stroke));
     }
 
     function applyStrokeToMask(stroke) {
         if (!stroke.points.length) return;
+        if (stroke.tool === 'restore') {
+            if (!cropOriginalImage) return;
+            const layer = document.createElement('canvas');
+            layer.width = maskCanvas.width;
+            layer.height = maskCanvas.height;
+            const ctx = layer.getContext('2d');
+            if (!ctx) throw new Error('No se pudo restaurar la imagen.');
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#fff';
+            drawBrushPath(ctx, stroke);
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.drawImage(cropOriginalImage, 0, 0, layer.width, layer.height);
+            maskCtx.drawImage(layer, 0, 0);
+            return;
+        }
         maskCtx.save();
-        maskCtx.strokeStyle = stroke.tool === 'erase' ? '#000' : '#fff';
-        maskCtx.fillStyle   = stroke.tool === 'erase' ? '#000' : '#fff';
-        maskCtx.globalCompositeOperation = stroke.tool === 'erase' ? 'destination-out' : 'source-over';
+        maskCtx.globalCompositeOperation = 'destination-out';
         drawBrushPath(maskCtx, stroke);
         maskCtx.restore();
     }
@@ -155,8 +166,6 @@ export function createAlphaMaskEditor({
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
         applyViewTransform(ctx);
-        ctx.drawImage(cropImage, 0, 0, cropCanvas.width, cropCanvas.height);
-        ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(maskCanvas, 0, 0, cropCanvas.width, cropCanvas.height);
         ctx.globalCompositeOperation = 'source-over';
         ctx.restore();
@@ -186,6 +195,7 @@ export function createAlphaMaskEditor({
         if (activeMaskStroke && maskStrokes[maskStrokes.length - 1] === activeMaskStroke) maskStrokes.pop();
         activeMaskStroke = null;
         cropDrawingPointerId = null;
+        rebuildMaskCanvas();
         syncMaskTools();
         const mid = midpointOfPointers();
         cropPinch = {
@@ -305,7 +315,7 @@ export function createAlphaMaskEditor({
             containRect = null;
             createMaskCanvas(image.width, image.height);
             document.getElementById('cropZoomIndicator').textContent = '100%';
-            maskTool = getImage(target).backgroundRemoved ? 'restore' : 'erase';
+            maskTool = getImage(target).backgroundRemoved && original ? 'restore' : 'erase';
             document.getElementById('maskRestoreToolBtn').disabled = !original;
             maskBrushSize.value = '36';
             maskBrushSizeValue.textContent = '36 px';
@@ -337,7 +347,6 @@ export function createAlphaMaskEditor({
         canvas.height = cropImage.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) { showToast('❌ No se pudo retocar la foto.'); return; }
-        ctx.drawImage(cropImage, 0, 0);
         ctx.drawImage(maskCanvas, 0, 0);
         try {
             const { photo, originalPhoto } = getImage(cropTarget);

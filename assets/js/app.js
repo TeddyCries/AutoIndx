@@ -44,7 +44,7 @@ const countBadge = document.getElementById('countBadge');
 const activePackageBadge = document.getElementById('activePackageBadge');
 const captureTitle = document.getElementById('captureTitle');
 const debugCamera = document.getElementById('debugCamera');
-const debugWithoutCamera = matchMedia('(pointer: fine) and (hover: hover)').matches;
+const debugWithoutCamera = new URLSearchParams(location.search).get('demo') === 'true';
 const homeView = document.getElementById('homeView');
 const collectionWorkspace = document.getElementById('collectionWorkspace');
 const collectionDashboard = document.getElementById('collectionDashboard');
@@ -84,16 +84,15 @@ let fotoOriginalBlob = null;
 let fotoReversoOriginalBlob = null;
 let editingPhotoId = null;
 let editingProductName = null;
-let isProductEditor = false;
 let productMaskEditingEnabled = false;
 let backgroundRemovedForCurrentProduct = false;
-let skipBackgroundRemovalForCurrentProduct = false;
 let currentImageIsDemo = false;
 let editorReturnToDashboard = false;
 let state = 'capturing';
 let retakeTarget = null;
 let thumbnailURLs = [];
 let thumbnailRenderVersion = 0;
+let workspaceRenderVersion = 0;
 let packages = [];
 let editingPackageId = null;
 let collectionPressTimer = null;
@@ -248,7 +247,10 @@ function storeRequest(storeName, mode, method, value) {
         const transaction = db.transaction(storeName, mode);
         const store = transaction.objectStore(storeName);
         const request = value === undefined ? store[method]() : store[method](value);
-        request.onsuccess = () => resolve(request.result);
+        let result;
+        request.onsuccess = () => { result = request.result; };
+        transaction.oncomplete = () => resolve(result);
+        transaction.onerror = () => reject(transaction.error || new Error('Falló una operación de almacenamiento.'));
         request.onerror = () => reject(request.error || new Error('Falló una operación de almacenamiento.'));
         transaction.onabort = () => reject(transaction.error || new Error('La operación de almacenamiento fue cancelada.'));
     });
@@ -499,10 +501,6 @@ collectionGrid.addEventListener('scroll', () => {
     collectionGrid.querySelectorAll('.collection-more-menu:not(.oculto)').forEach(menu => menu.classList.add('oculto'));
     collectionGrid.querySelectorAll('.collection-more-button').forEach(button => button.setAttribute('aria-expanded', 'false'));
 });
-async function renderCollectionLibrary() {
-    const allProducts = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
-    renderCollectionHome(allProducts);
-}
 function setCameraToolButtonLabel(label) {
     const button = document.getElementById('openCameraToolBtn');
     button.querySelector('span').textContent = label;
@@ -575,8 +573,8 @@ function exitCameraWorkspace() {
     if (photoPreviewFrontal.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewFrontal.src);
     if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
     fotoBlob = null; fotoReversoBlob = null; fotoOriginalBlob = null; fotoReversoOriginalBlob = null;
-    editingPhotoId = null; editingProductName = null; isProductEditor = false; productMaskEditingEnabled = false;
-    backgroundRemovedForCurrentProduct = false; skipBackgroundRemovalForCurrentProduct = false; currentImageIsDemo = false;
+    editingPhotoId = null; editingProductName = null; productMaskEditingEnabled = false;
+    backgroundRemovedForCurrentProduct = false; currentImageIsDemo = false;
     editorReturnToDashboard = false;
     viewWrapper.classList.remove('review-mode');
     video.classList.add('oculto'); debugCamera.classList.add('oculto'); previewContainer.classList.add('oculto');
@@ -633,8 +631,11 @@ document.getElementById('preparePackageBtn').addEventListener('click', preparePa
 async function renderCollectionWorkspace() {
     if (!db) return;
     try {
-        productObjectUrls.forEach(url => URL.revokeObjectURL(url)); productObjectUrls = [];
+        const renderVersion = ++workspaceRenderVersion;
+        const packageId = activePackageId;
         const allProducts = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
+        if (renderVersion !== workspaceRenderVersion || packageId !== activePackageId) return;
+        productObjectUrls.forEach(url => URL.revokeObjectURL(url)); productObjectUrls = [];
         renderCollectionHome(allProducts);
         const counts = new Map();
         allProducts.forEach(item => {
@@ -664,9 +665,6 @@ async function renderCollectionWorkspace() {
             });
             productGrid.appendChild(card);
         });
-        if (currentProducts.length === 0) {
-
-        }
     } catch (error) { showToast(`❌ No se pudieron cargar los productos de la colección: ${error.message}`); }
 }
 function enterProductEditor(item, { allowMaskEditing = true } = {}) {
@@ -690,10 +688,8 @@ function enterProductEditor(item, { allowMaskEditing = true } = {}) {
     fotoOriginalBlob = item.fotoOriginal || null; fotoReversoOriginalBlob = item.fotoReversoOriginal || null;
     sizeSelect.value = item.talla || ''; setPriceSelection(item.precio || '');
     editingPhotoId = item.id; editingProductName = item.nombre || null;
-    isProductEditor = true;
     productMaskEditingEnabled = allowMaskEditing;
     backgroundRemovedForCurrentProduct = Boolean(item.fondoEliminado);
-    skipBackgroundRemovalForCurrentProduct = Boolean(item.demo);
     currentImageIsDemo = Boolean(item.demo);
     showReviewMode();
 }
@@ -805,7 +801,7 @@ async function exportDesignedPackage() {
             await templateEditor.drawProductTemplate(canvas, item);
             output.file(`foto_${number}_frontal.png`, await canvasToBlob(canvas));
         }
-        if (templateEditor.getBackground()) zip.file('bk_image.png', templateEditor.getBackground());
+        if (templateEditor.getBackground()) zip.file('bk_image.png', await convertToPng(templateEditor.getBackground()));
         zip.file('README.txt', `Paquete compatible con IMGAuto.py\nProductos: ${items.length}\nPlantilla renderizada en output/.\nFuentes transparentes y datos en input/.\n`);
         const content = await zip.generateAsync({ type: 'blob' });
         const url = URL.createObjectURL(content); const link = document.createElement('a');
@@ -858,7 +854,6 @@ captureBtn.addEventListener('click', async () => {
             else if (retakeTarget === 'reverso') { fotoReversoBlob = blob; fotoReversoOriginalBlob = null; }
             backgroundRemovedForCurrentProduct = false;
             currentImageIsDemo = debugWithoutCamera;
-            skipBackgroundRemovalForCurrentProduct = debugWithoutCamera;
         }
         showReviewMode();
     } catch (error) {
@@ -1024,9 +1019,8 @@ function showCameraMode() {
     if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
     fotoBlob = null; fotoReversoBlob = null; fotoOriginalBlob = null; fotoReversoOriginalBlob = null;
     editingPhotoId = null; editingProductName = null;
-    isProductEditor = false;
     productMaskEditingEnabled = false;
-    backgroundRemovedForCurrentProduct = false; skipBackgroundRemovalForCurrentProduct = false; currentImageIsDemo = false;
+    backgroundRemovedForCurrentProduct = false; currentImageIsDemo = false;
     editorReturnToDashboard = false;
     preparingOverlay.classList.add('oculto'); alphaMaskEditor.close();
     sizeSelect.value = ""; setPriceSelection('');
@@ -1050,7 +1044,7 @@ function showRetakeMode(target) {
     video.classList.toggle('oculto', debugWithoutCamera); debugCamera.classList.toggle('oculto', !debugWithoutCamera); previewContainer.classList.add('oculto');
     cameraControls.classList.toggle('oculto', debugWithoutCamera); captureBtn.classList.remove('oculto');
     captureBtn.disabled = false;
-    compositionGrid.classList.add('oculto', !compositionGridEnabled || debugWithoutCamera);
+    compositionGrid.classList.toggle('oculto', !compositionGridEnabled || debugWithoutCamera);
     reviewControls.classList.remove('oculto'); setReviewControlsDisabled(true);
     thumbnails.classList.add('disabled-thumbnails');
     actionsDiv.classList.add('oculto');
@@ -1096,7 +1090,7 @@ retakeReversoBtn.onclick = () => showRetakeMode('reverso');
 deleteReversoBtn.onclick = async () => {
     if (await askForConfirmation("¿Eliminar solo la foto de reverso?")) {
         if (photoPreviewReverso.src.startsWith('blob:')) URL.revokeObjectURL(photoPreviewReverso.src);
-        fotoReversoBlob = null; showToast("Reverso eliminado."); showReviewMode();
+        fotoReversoBlob = null; fotoReversoOriginalBlob = null; showToast("Reverso eliminado."); showReviewMode();
     }
 };
 cancelDualBtn.onclick = cancelCurrentReview;
@@ -1114,6 +1108,8 @@ function cancelCurrentReview() {
 async function handleSave() {
     if (!fotoBlob) { showToast("⚠️ No hay foto frontal para guardar."); return; }
     if (!sizeSelect.value || !priceSelect.value) { showToast("⚠️ Selecciona talla y precio antes de guardar."); return; }
+    if (saveSingleBtn.disabled || saveDualBtn.disabled) return;
+    setReviewControlsDisabled(true);
     const tx = db.transaction(OBJECT_STORE_NAME, "readwrite");
     const store = tx.objectStore(OBJECT_STORE_NAME);
     const record = {
@@ -1142,7 +1138,7 @@ async function handleSave() {
         renderCollectionWorkspace();
         templateEditor.renderPreview().catch(error => showToast(`❌ No se pudo actualizar la vista previa: ${error.message}`));
     };
-    tx.onerror = () => { showToast("❌ Error al guardar el producto."); };
+    tx.onabort = () => { setReviewControlsDisabled(false); showToast("❌ Error al guardar el producto."); };
 }
 function convertToPng(blob) {
     return new Promise((resolve, reject) => {
@@ -1162,19 +1158,6 @@ function convertToPng(blob) {
         img.src = url;
     });
 }
-function convertToJpg(blob) {
-    return new Promise(resolve => {
-        const img = document.createElement('img');
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            canvas.toBlob(resolve, 'image/jpeg', 0.85); URL.revokeObjectURL(img.src);
-        };
-        img.src = URL.createObjectURL(blob);
-    });
-}
-
 clearDataBtn.onclick = async () => {
     try {
         const records = await storeRequest(OBJECT_STORE_NAME, 'readonly', 'getAll');
@@ -1231,14 +1214,12 @@ async function exportCollectionZip(packageId) {
 }
 saveZipBtn.addEventListener('click', () => exportCollectionZip(activePackageId));
 
-function executeDelete(photoId, frontalUrl, reversoUrl) {
+function executeDelete(photoId) {
     if (!db) return;
     const transaction = db.transaction(OBJECT_STORE_NAME, "readwrite");
     transaction.objectStore(OBJECT_STORE_NAME).delete(photoId);
     transaction.oncomplete = () => {
         showToast("Foto eliminada.");
-        if (frontalUrl) URL.revokeObjectURL(frontalUrl);
-        if (reversoUrl) URL.revokeObjectURL(reversoUrl);
         updateUI(); renderCollectionWorkspace();
     };
     transaction.onerror = () => { showToast("❌ Error al eliminar la foto."); };
@@ -1307,8 +1288,7 @@ function updateUI() {
             deleteButton.setAttribute('aria-label', `Eliminar ${photoData.nombre || `prenda ${photoData.id}`}`);
             deleteButton.addEventListener('click', async () => {
                 if (await askForConfirmation("¿Deseas eliminar esta foto?")) {
-                    const reversoUrlToRevoke = photoData.fotoReverso ? URL.createObjectURL(photoData.fotoReverso) : null;
-                    executeDelete(photoData.id, img.src, reversoUrlToRevoke);
+                    executeDelete(photoData.id);
                 }
             });
             container.appendChild(deleteButton);

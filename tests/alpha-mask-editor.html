@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pruebas del editor de máscara</title>
+<pre id="results">RUNNING</pre>
+<script type="module">
+import { createAlphaMaskEditor } from '../assets/js/alpha-mask-editor.js';
+const ids = ['cropModal','cropCanvas','maskBrushSize','maskBrushSizeValue','maskUndoBtn','cropZoomIndicator','maskRestoreToolBtn','maskEraseToolBtn','maskBrushControl','maskEditorHint','cropCloseBtn','cropFrontBtn','cropBackBtn','applyCropBtn','restoreImageBtn','maskResetBtn'];
+for (const id of ids) {
+    const element = document.createElement(id === 'cropCanvas' ? 'canvas' : id === 'maskBrushSize' ? 'input' : 'button');
+    element.id = id;
+    document.body.append(element);
+}
+const canvas = document.getElementById('cropCanvas');
+canvas.style.cssText = 'display:block;width:100px;height:100px';
+canvas.setPointerCapture = () => {};
+let photo, originalPhoto, saved, opened, applied, backgroundRemoved = false;
+const toBlob = canvas => new Promise(resolve => canvas.toBlob(resolve));
+const load = blob => createImageBitmap(blob);
+const assert = (value, message) => { if (!value) throw new Error(message); };
+const pixel = async blob => {
+    const image = await load(blob);
+    const c = document.createElement('canvas'); c.width = c.height = 100;
+    const ctx = c.getContext('2d'); ctx.drawImage(image, 0, 0); image.close();
+    return ctx.getImageData(50, 50, 1, 1).data;
+};
+const gesture = (type, pointerId = 1) => {
+    const rect = canvas.getBoundingClientRect();
+    canvas.dispatchEvent(new PointerEvent(type, { pointerId, clientX: rect.left + 50, clientY: rect.top + 50 }));
+};
+const editor = createAlphaMaskEditor({ document, loadImageBlob: load,
+    getImage: () => ({ photo, originalPhoto, backgroundRemoved }),
+    setImage: (_, image) => { saved = image; applied?.(); }, setBackgroundRemoved: value => { backgroundRemoved = value; },
+    canvasToBlob: toBlob, navigateBack: close => close(), pushAppNavigation: () => { opened?.(); },
+    showReviewMode: () => {}, showToast: message => { if (message.startsWith('❌')) throw new Error(message); }
+});
+async function open() {
+    await new Promise(resolve => { opened = resolve; editor.open('frontal'); });
+}
+async function apply() {
+    saved = null;
+    await new Promise(resolve => { applied = resolve; document.getElementById('applyCropBtn').click(); });
+    assert(saved, 'La imagen debe guardarse');
+    return pixel(saved);
+}
+try {
+    const source = document.createElement('canvas'); source.width = source.height = 100;
+    const ctx = source.getContext('2d'); ctx.fillStyle = '#ff0000'; ctx.fillRect(0, 0, 100, 100);
+    photo = originalPhoto = await toBlob(source);
+    await open();
+    let p = await apply(); assert(p[0] === 255 && p[1] === 0 && p[3] === 255, 'Aplicar sin trazos debe conservar la foto roja');
+    await open(); gesture('pointerdown'); gesture('pointerup');
+    p = await apply(); assert(p[3] === 0, 'Borrar debe volver transparente el píxel');
+    photo = saved; backgroundRemoved = true;
+    await open(); gesture('pointerdown'); gesture('pointerup');
+    p = await apply(); assert(p[0] === 255 && p[1] === 0 && p[3] === 255, 'Restaurar debe recuperar el píxel rojo original');
+    photo = originalPhoto; backgroundRemoved = false;
+    await open(); gesture('pointerdown'); gesture('pointerdown', 2); gesture('pointerup', 2); gesture('pointerup');
+    p = await apply(); assert(p[3] === 255, 'El gesto de dos dedos debe cancelar el trazo inicial');
+    await open(); gesture('pointerdown'); gesture('pointerup'); document.getElementById('maskUndoBtn').click();
+    p = await apply(); assert(p[3] === 255, 'Deshacer debe recuperar la imagen');
+    document.getElementById('results').textContent = 'PASS: conservar imagen, borrar, restaurar, gesto de dos dedos y deshacer';
+} catch (error) { document.getElementById('results').textContent = `FAIL: ${error.stack}`; }
+</script>
